@@ -5,3 +5,28 @@ editor: visual
 ---
 
 ## Data Processing
+
+```{r}
+library(tidycensus)
+library(httr)
+library(jsonlite)
+library(dplyr)
+library(tidyverse)
+```
+
+```{r}
+pums_URL <- "https://api.census.gov/data/2022/acs/acs1/pums?get=SEX,PWGTP,MAR&SCHL=24"
+pums_data <- httr::GET(pums_URL)
+str(pums_data)
+```
+
+|     |
+|:----|
+|     |
+
+```{r}
+pums_parsed <- fromJSON(rawToChar(pums_data$content))
+colnames(pums_parsed) <- pums_parsed[1,]
+pums_info <- as_tibble(pums_parsed[-1,])
+pums_info
+```
