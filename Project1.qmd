@@ -25,8 +25,8 @@ str(pums_data)
 Next, we need to write a helper function that can take the output of GET() and turn it into a tibble. The function was written generally, so it can be used for any Census API query. Then, we plugged in the PUMS data to return a tibble.
 
 ```{r}
-clean_census <- function(resp) {
-  pums_parsed <- fromJSON(rawToChar(resp$content))
+clean_census <- function(res) {
+  pums_parsed <- fromJSON(rawToChar(res$content))
   colnames(pums_parsed) <- pums_parsed[1,]
   pums_info <- as_tibble(pums_parsed[-1,])
   return(pums_info)
@@ -34,3 +34,26 @@ clean_census <- function(resp) {
 pums_info <- clean_census(pums_data)
 pums_info
 ```
+
+Now, we need a function that can query the API and allow the user to change a few things. To do this, we wrote a function that requires that the year be between 2010 and 2022, includes at least one variable other than PWGTP, specifies categorical variables to be returned, specifies geography level, and allows for optional subsetting of the data. We wrote a function that does these things, then validated the inputs.   
+
+```{r}
+pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), categorical_variables = c("SEX"), geography = "All", filter = NULL){
+  if(!(year %in% 2010:2022)){
+    stop("Year is not valid")
+  }
+  if(!("PWGTP" %in% numeric_variables)){
+    stop("PWGTP must be in numeric_variables")
+  }
+  if(length(numeric_variables) < 2){
+    stop("Another numeric variable must be requested")
+  }
+  if(length(categorical_variables) < 1){
+    stop("A categorical variable must be requested")
+  }
+  if(!(geography %in% c("All", "Region", "Division", "State"))){
+    stop("Must specify geography level")
+  }
+}
+```
+
