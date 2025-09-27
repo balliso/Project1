@@ -34,7 +34,7 @@ pums_info <- clean_census(pums_data)
 pums_info
 ```
 
-Now, we need a function that can query the API and allow the user to change a few things. To do this, we wrote a function that requires that the year be between 2010 and 2022, includes at least one variable other than PWGTP, specifies categorical variables to be returned, specifies geography level, and allows for optional subsetting of the data. We wrote a function that does these things, then validated the inputs.   
+Now, we need a function that can query the API and allow the user to change a few things. To do this, we wrote a function that requires that the year be between 2010 and 2022, includes at least one variable other than PWGTP, specifies categorical variables to be returned, specifies geography level, and allows for optional subsetting of the data. We wrote a function that does these things, then validated the inputs and returned a tibble.
 
 ```{r}
 pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), categorical_variables = c("SEX"), geography = "state", state = "03", filter = NULL){
@@ -50,26 +50,38 @@ pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), cate
   if(length(categorical_variables) < 1){
     stop("A categorical variable must be requested")
   }
-  if(!(geography %in% c("All", "Region", "Division", "State"))){
+  if(!(tolower(geography) %in% c("all", "region", "division", "state"))){
     stop("Must specify geography level")
   }
   if(!(state %in% sprintf("%02d", 1:56))){
     stop("State must be 2 digit code between 01 and 56")
   }
-  variables <- paste(c(numeric_variables, categorical_variables))
-  url_result <- paste0("https://api.census.gov/data/", year, "/acs/acs1/pums?", "variables=", variables, "&geography=", geography, "&state=", state)
+  variables <- paste(c(numeric_variables, categorical_variables, "ST"), collapse = ",")
+  build_url <- paste0("https://api.census.gov/data/", year, "/acs/acs1/pums?get=", variables)
+  
+  url_result <- GET(build_url)
+  if(status_code(url_result) != 200){
+    stop("Request failed with status: ", status_code(url_result))
+  }
+  
+  
+  census_tibble <- fromJSON(rawToChar(url_result$content))
+  colnames(census_tibble) <- census_tibble[1,]
+  census_tibble <- as_tibble(census_tibble[-1,])
+  census_tibble <- census_tibble[census_tibble$ST == state,]
+  
+  return(census_tibble)
 }
 ```
 
->>>>>>> b284d86702aa455887fe51ce87b6ab5b4da2827a
+```{r}
+# Default test (should return state 03 data with AGEP, PWGTP, SEX)
+test1 <- pums_query()
+print(head(test1))
 
+```
 
-
-
-
-
-
-
+> > > > > > > b284d86702aa455887fe51ce87b6ab5b4da2827a
 
 #Writing a Generic Function for Summarizing
 
@@ -98,4 +110,3 @@ summary.census <- function(census, numeric_vector, car_vars){
 #summarize_census(census, c(income, age), c(gender, education))
 
 ```
-
