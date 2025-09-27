@@ -34,11 +34,6 @@ pums_info <- clean_census(pums_data)
 pums_info
 ```
 
-<<<<<<< HEAD
-
-
-
-
 Now, we need a function that can query the API and allow the user to change a few things. To do this, we wrote a function that requires that the year be between 2010 and 2022, includes at least one variable other than PWGTP, specifies categorical variables to be returned, specifies geography level, and allows for optional subsetting of the data. We wrote a function that does these things, then validated the inputs.   
 
 ```{r}
@@ -61,6 +56,8 @@ pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), cate
   if(!(state %in% sprintf("%02d", 1:56))){
     stop("State must be 2 digit code between 01 and 56")
   }
+  variables <- paste(c(numeric_variables, categorical_variables))
+  url_result <- paste0("https://api.census.gov/data/", year, "/acs/acs1/pums?", "variables=", variables, "&geography=", geography, "&state=", state)
 }
 ```
 
