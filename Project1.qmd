@@ -34,3 +34,37 @@ clean_census <- function(resp) {
 pums_info <- clean_census(pums_data)
 pums_info
 ```
+
+
+
+
+
+
+
+
+#Writing a Generic Function for Summarizing
+
+```{r}
+library(dplyr)
+#Run these in your console
+plot.function #what is used for a class = function
+getS3method("plot","data.frame") #what is used for a class = data frame
+plot
+#Add our own class to our census data for summarizing purposes.
+class(pums_info) <- c("census", class(pums_info))
+#check structure of tibble
+str(pums_info)
+summary.census <- function(census, numeric_vector, car_vars){
+#assigning weight to the column PWGTP in the data
+  weight <- census$PWGTP
+# numeric summaries
+ 
+  
+  numeric_summary<-list(mean=x,sd=y)
+ 
+# categorical summaries
+    
+}
+
+#summarize_census(census, c(income, age), c(gender, education))
+```
