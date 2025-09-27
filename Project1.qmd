@@ -7,7 +7,6 @@ editor: visual
 ## Data Processing
 
 ```{r}
-library(tidycensus)
 library(httr)
 library(jsonlite)
 library(dplyr)
@@ -38,7 +37,7 @@ pums_info
 Now, we need a function that can query the API and allow the user to change a few things. To do this, we wrote a function that requires that the year be between 2010 and 2022, includes at least one variable other than PWGTP, specifies categorical variables to be returned, specifies geography level, and allows for optional subsetting of the data. We wrote a function that does these things, then validated the inputs.   
 
 ```{r}
-pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), categorical_variables = c("SEX"), geography = "All", filter = NULL){
+pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), categorical_variables = c("SEX"), geography = "state", state = "03", filter = NULL){
   if(!(year %in% 2010:2022)){
     stop("Year is not valid")
   }
@@ -53,6 +52,9 @@ pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), cate
   }
   if(!(geography %in% c("All", "Region", "Division", "State"))){
     stop("Must specify geography level")
+  }
+  if(!(state %in% sprintf("%02d", 1:56))){
+    stop("State must be 2 digit code between 01 and 56")
   }
 }
 ```
