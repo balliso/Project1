@@ -151,9 +151,9 @@ Attaching package: 'dplyr'</code></pre>
   ..$ content-security-policy     : chr "default-src 'self'; img-src 'self' data:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self"| __truncated__
   ..$ x-content-type-options      : chr "nosniff"
   ..$ content-type                : chr "application/json;charset=utf-8"
-  ..$ date                        : chr "Sat, 27 Sep 2025 02:35:23 GMT"
+  ..$ date                        : chr "Sat, 27 Sep 2025 02:37:20 GMT"
   ..$ strict-transport-security   : chr "max-age=31536000"
-  ..$ set-cookie                  : chr "TS010383f0=01283c52a48f42ce5c9c52a8e56f747f5fbb46d67b21c3343b826effcf6d22d327be96909fb1d96b75c3e675b167d5617a36"| __truncated__
+  ..$ set-cookie                  : chr "TS010383f0=01283c52a4a3ae7541fb6709610162d668335b590bdd6e54a99115bfc65fcd8ad8fb859c832dd029ac0f159dbaee8c96c61f"| __truncated__
   ..$ transfer-encoding           : chr "chunked"
   ..- attr(*, "class")= chr [1:2] "insensitive" "list"
  $ all_headers:List of 1
@@ -169,9 +169,9 @@ Attaching package: 'dplyr'</code></pre>
   .. .. ..$ content-security-policy     : chr "default-src 'self'; img-src 'self' data:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self"| __truncated__
   .. .. ..$ x-content-type-options      : chr "nosniff"
   .. .. ..$ content-type                : chr "application/json;charset=utf-8"
-  .. .. ..$ date                        : chr "Sat, 27 Sep 2025 02:35:23 GMT"
+  .. .. ..$ date                        : chr "Sat, 27 Sep 2025 02:37:20 GMT"
   .. .. ..$ strict-transport-security   : chr "max-age=31536000"
-  .. .. ..$ set-cookie                  : chr "TS010383f0=01283c52a48f42ce5c9c52a8e56f747f5fbb46d67b21c3343b826effcf6d22d327be96909fb1d96b75c3e675b167d5617a36"| __truncated__
+  .. .. ..$ set-cookie                  : chr "TS010383f0=01283c52a4a3ae7541fb6709610162d668335b590bdd6e54a99115bfc65fcd8ad8fb859c832dd029ac0f159dbaee8c96c61f"| __truncated__
   .. .. ..$ transfer-encoding           : chr "chunked"
   .. .. ..- attr(*, "class")= chr [1:2] "insensitive" "list"
  $ cookies    :'data.frame':    1 obs. of  7 variables:
@@ -181,10 +181,10 @@ Attaching package: 'dplyr'</code></pre>
   ..$ secure    : logi TRUE
   ..$ expiration: POSIXct[1:1], format: "Inf"
   ..$ name      : chr "TS010383f0"
-  ..$ value     : chr "01283c52a48f42ce5c9c52a8e56f747f5fbb46d67b21c3343b826effcf6d22d327be96909fb1d96b75c3e675b167d5617a36330e41"
+  ..$ value     : chr "01283c52a4a3ae7541fb6709610162d668335b590bdd6e54a99115bfc65fcd8ad8fb859c832dd029ac0f159dbaee8c96c61f84635c"
  $ content    : raw [1:937508] 5b 5b 22 53 ...
- $ date       : POSIXct[1:1], format: "2025-09-27 02:35:23"
- $ times      : Named num [1:6] 0 0.00179 0.02358 0.07165 0.31481 ...
+ $ date       : POSIXct[1:1], format: "2025-09-27 02:37:20"
+ $ times      : Named num [1:6] 0 0.00175 0.02242 0.07166 0.29572 ...
   ..- attr(*, "names")= chr [1:6] "redirect" "namelookup" "connect" "pretransfer" ...
  $ request    :List of 7
   ..$ method    : chr "GET"
@@ -266,6 +266,101 @@ Attaching package: 'dplyr'</code></pre>
 </blockquote>
 </blockquote>
 </blockquote>
+<p>#Writing a Generic Function for Summarizing</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co">#Run these in your console</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>plot.function <span class="co">#what is used for a class = function</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>function (x, y = 0, to = 1, from = y, xlim = NULL, ylab = NULL, 
+    ...) 
+{
+    if (!missing(y) &amp;&amp; missing(from)) 
+        from &lt;- y
+    if (is.null(xlim)) {
+        if (is.null(from)) 
+            from &lt;- 0
+    }
+    else {
+        if (missing(from)) 
+            from &lt;- xlim[1L]
+        if (missing(to)) 
+            to &lt;- xlim[2L]
+    }
+    if (is.null(ylab)) {
+        sx &lt;- substitute(x)
+        ylab &lt;- if (mode(x) != "name") 
+            deparse(sx)[1L]
+        else {
+            xname &lt;- list(...)[["xname"]]
+            if (is.null(xname)) 
+                xname &lt;- "x"
+            paste0(sx, "(", xname, ")")
+        }
+    }
+    curve(expr = x, from = from, to = to, xlim = xlim, ylab = ylab, 
+        ...)
+}
+&lt;bytecode: 0x117ceeff0&gt;
+&lt;environment: namespace:graphics&gt;</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getS3method</span>(<span class="st">"plot"</span>,<span class="st">"data.frame"</span>) <span class="co">#what is used for a class = data frame</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>function (x, ...) 
+{
+    plot2 &lt;- function(x, xlab = names(x)[1L], ylab = names(x)[2L], 
+        ...) plot(x[[1L]], x[[2L]], xlab = xlab, ylab = ylab, 
+        ...)
+    if (!is.data.frame(x)) 
+        stop("'plot.data.frame' applied to non data frame")
+    if (ncol(x) == 1) {
+        x1 &lt;- x[[1L]]
+        if (class(x1)[1L] %in% c("integer", "numeric")) 
+            stripchart(x1, ...)
+        else plot(x1, ...)
+    }
+    else if (ncol(x) == 2) {
+        plot2(x, ...)
+    }
+    else {
+        pairs(data.matrix(x), ...)
+    }
+}
+&lt;bytecode: 0x117cb5028&gt;
+&lt;environment: namespace:graphics&gt;</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>plot</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>function (x, y, ...) 
+UseMethod("plot")
+&lt;bytecode: 0x110e84108&gt;
+&lt;environment: namespace:base&gt;</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Add our own class to our census data for summarizing purposes.</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(pums_info) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"census"</span>, <span class="fu">class</span>(pums_info))</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co">#check structure of tibble</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(pums_info)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>census [44,079 × 4] (S3: census/tbl_df/tbl/data.frame)
+ $ SEX  : chr [1:44079] "2" "2" "1" "1" ...
+ $ PWGTP: chr [1:44079] "6" "23" "23" "80" ...
+ $ MAR  : chr [1:44079] "5" "2" "3" "5" ...
+ $ SCHL : chr [1:44079] "24" "24" "24" "24" ...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>summary.census <span class="ot">&lt;-</span> <span class="cf">function</span>(census, numeric_vector, car_vars){</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="co">#assigning weight to the column PWGTP in the data</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  weight <span class="ot">&lt;-</span> census<span class="sc">$</span>PWGTP</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co"># numeric summaries</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  numeric_summary<span class="ot">&lt;-</span><span class="fu">list</span>(<span class="at">mean=</span>x,<span class="at">sd=</span>y)</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="co"># categorical summaries</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="co">#summarize_census(census, c(income, age), c(gender, education))</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 </section>
 
 </main>
