@@ -74,10 +74,9 @@ pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), cate
 }
 ```
 
+
+
 ```{r}
-# Default test (should return state 03 data with AGEP, PWGTP, SEX)
-test1 <- pums_query()
-print(head(test1))
 
 ```
 
