@@ -34,6 +34,11 @@ pums_info <- clean_census(pums_data)
 pums_info
 ```
 
+<<<<<<< HEAD
+
+
+
+
 Now, we need a function that can query the API and allow the user to change a few things. To do this, we wrote a function that requires that the year be between 2010 and 2022, includes at least one variable other than PWGTP, specifies categorical variables to be returned, specifies geography level, and allows for optional subsetting of the data. We wrote a function that does these things, then validated the inputs.   
 
 ```{r}
@@ -57,5 +62,43 @@ pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), cate
     stop("State must be 2 digit code between 01 and 56")
   }
 }
+```
+
+>>>>>>> b284d86702aa455887fe51ce87b6ab5b4da2827a
+
+
+
+
+
+
+
+
+
+#Writing a Generic Function for Summarizing
+
+```{r}
+library(dplyr)
+#Run these in your console
+plot.function #what is used for a class = function
+getS3method("plot","data.frame") #what is used for a class = data frame
+plot
+#Add our own class to our census data for summarizing purposes.
+class(pums_info) <- c("census", class(pums_info))
+#check structure of tibble
+str(pums_info)
+summary.census <- function(census, numeric_vector, car_vars){
+#assigning weight to the column PWGTP in the data
+  weight <- census$PWGTP
+# numeric summaries
+ 
+  
+  numeric_summary<-list(mean=x,sd=y)
+ 
+# categorical summaries
+    
+}
+
+#summarize_census(census, c(income, age), c(gender, education))
+
 ```
 
