@@ -7,7 +7,6 @@ editor: visual
 ## Data Processing
 
 ```{r}
-library(tidycensus)
 library(httr)
 library(jsonlite)
 library(dplyr)
@@ -84,17 +83,56 @@ plot
 class(pums_info) <- c("census", class(pums_info))
 #check structure of tibble
 str(pums_info)
-summary.census <- function(census, numeric_vector, car_vars){
+summary.census <- function(census, numeric_var=NULL, car_var=NULL){
 #assigning weight to the column PWGTP in the data
   weight <- census$PWGTP
+ if (is.null(numeric_var) & is.null(car_var)) {
+   summary<-census |>
+     # Sample mean for numeric variables
+        across(
+          where(is.numeric),
+          function(x){
+            s_mean <- sum(x * weight / sum(weight))
+            return(s_mean)
+          },
+          .names="{.col}_sample_mean"
+        )
+        # Sample standard deviation for numeric variables
+        across(
+          where(is.numeric),
+          function(x){
+            s_mean <- sum(x * weight / sum(weight))   # recompute mean here
+            s_sd <- sqrt(sum(x^2 * weight)/sum(weight) - s_mean^2)
+            return(s_sd)
+        }
+        ,.names="{.col}_sample_sd"
+     )
+   across(
+       where(is.character),
+        function(x){
+              #Count
+           return(setNames(as.vector(table(x)), names(table(x)))) 
+        }
+       ,.names = "{.col}_counts" 
+   )
+   
+
+   return(list(
+      Numeric_Summary = summary,
+      Sex_Counts = summary$SEX_counts[[1]],
+      Mar_Counts = summary$MAR_counts[[1]],
+      SCHL_Counts = summary$SCHL_counts[[1]]
+    ))
+   }else{
+    stop("cat_var is NULL")
+  }
+}
+
 # numeric summaries
  
-  
-  numeric_summary<-list(mean=x,sd=y)
- 
 # categorical summaries
-    
-}
+  
+
 
 #summarize_census(census, c(income, age), c(gender, education))
 
