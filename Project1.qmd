@@ -74,13 +74,24 @@ pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), cate
 }
 ```
 
-
+The last function was able to return a tibble for a single year of data, but now we are going to make a multiyear function.
 
 ```{r}
-
+pums_multi_year <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), categorical_variables = c("SEX"), geography = "state", state = "03", filter = NULL){
+  years <- as.integer(years)
+  all_data <- list()
+  for(yr in years){
+    test_tibble <- pums_query(
+      year = yr, numberic_variables = numberic_variables, categorical_variables = categorical_variables, geography = geography, state = state, filter = filter
+    )
+    test_tibble$year <- yr
+    all_tibbles[[as.character(yr)]] <- test_tibble
+  }
+  combined_tibble <- dplyr::bind_rows(all_tibbles)
+  
+  return(combined_tibble)
+}
 ```
-
-> > > > > > > b284d86702aa455887fe51ce87b6ab5b4da2827a
 
 #Writing a Generic Function for Summarizing
 
