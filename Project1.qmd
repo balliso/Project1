@@ -77,7 +77,6 @@ pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), cate
 
 
 ```{r}
-
 ```
 
 > > > > > > > b284d86702aa455887fe51ce87b6ab5b4da2827a
@@ -91,9 +90,9 @@ plot.function #what is used for a class = function
 getS3method("plot","data.frame") #what is used for a class = data frame
 plot
 #Add our own class to our census data for summarizing purposes.
-class(pums_info) <- c("census", class(pums_info))
+class(census_tibble) <- c("census", class(census_tibble))
 #check structure of tibble
-str(pums_info)
+str(census_tibble)
 summary.census <- function(census, numeric_var=NULL, car_var=NULL){
 #assigning weight to the column PWGTP in the data
   weight <- census$PWGTP
@@ -138,7 +137,7 @@ summary.census <- function(census, numeric_var=NULL, car_var=NULL){
     stop("cat_var is NULL")
   }
 }
-
+summary.census(census_tibble)
 # numeric summaries
  
 # categorical summaries

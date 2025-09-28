@@ -150,9 +150,9 @@ Attaching package: 'dplyr'</code></pre>
   ..$ content-security-policy     : chr "default-src 'self'; img-src 'self' data:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self"| __truncated__
   ..$ x-content-type-options      : chr "nosniff"
   ..$ content-type                : chr "application/json;charset=utf-8"
-  ..$ date                        : chr "Sat, 27 Sep 2025 04:39:09 GMT"
+  ..$ date                        : chr "Sun, 28 Sep 2025 18:11:01 GMT"
   ..$ strict-transport-security   : chr "max-age=31536000"
-  ..$ set-cookie                  : chr "TS010383f0=01283c52a4f9cc403c71b8d7e3df0eada951d88e0f6b41d3bc37f73288aca050ed4ea55c8474ed1dbd1253dfbd5d9f52c831"| __truncated__
+  ..$ set-cookie                  : chr "TS010383f0=01283c52a46450c0a7351cbbc8975050f76b857325849f375eeabcdafd6e2bdbdd8552483824ad02fc0f99cd5118e721b0dc"| __truncated__
   ..$ transfer-encoding           : chr "chunked"
   ..- attr(*, "class")= chr [1:2] "insensitive" "list"
  $ all_headers:List of 1
@@ -168,9 +168,9 @@ Attaching package: 'dplyr'</code></pre>
   .. .. ..$ content-security-policy     : chr "default-src 'self'; img-src 'self' data:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self"| __truncated__
   .. .. ..$ x-content-type-options      : chr "nosniff"
   .. .. ..$ content-type                : chr "application/json;charset=utf-8"
-  .. .. ..$ date                        : chr "Sat, 27 Sep 2025 04:39:09 GMT"
+  .. .. ..$ date                        : chr "Sun, 28 Sep 2025 18:11:01 GMT"
   .. .. ..$ strict-transport-security   : chr "max-age=31536000"
-  .. .. ..$ set-cookie                  : chr "TS010383f0=01283c52a4f9cc403c71b8d7e3df0eada951d88e0f6b41d3bc37f73288aca050ed4ea55c8474ed1dbd1253dfbd5d9f52c831"| __truncated__
+  .. .. ..$ set-cookie                  : chr "TS010383f0=01283c52a46450c0a7351cbbc8975050f76b857325849f375eeabcdafd6e2bdbdd8552483824ad02fc0f99cd5118e721b0dc"| __truncated__
   .. .. ..$ transfer-encoding           : chr "chunked"
   .. .. ..- attr(*, "class")= chr [1:2] "insensitive" "list"
  $ cookies    :'data.frame':    1 obs. of  7 variables:
@@ -180,10 +180,10 @@ Attaching package: 'dplyr'</code></pre>
   ..$ secure    : logi TRUE
   ..$ expiration: POSIXct[1:1], format: "Inf"
   ..$ name      : chr "TS010383f0"
-  ..$ value     : chr "01283c52a4f9cc403c71b8d7e3df0eada951d88e0f6b41d3bc37f73288aca050ed4ea55c8474ed1dbd1253dfbd5d9f52c831b86059"
+  ..$ value     : chr "01283c52a46450c0a7351cbbc8975050f76b857325849f375eeabcdafd6e2bdbdd8552483824ad02fc0f99cd5118e721b0dc3a155a"
  $ content    : raw [1:937508] 5b 5b 22 53 ...
- $ date       : POSIXct[1:1], format: "2025-09-27 04:39:09"
- $ times      : Named num [1:6] 0 0.0518 0.0733 0.1244 0.3529 ...
+ $ date       : POSIXct[1:1], format: "2025-09-28 18:11:01"
+ $ times      : Named num [1:6] 0 0.00269 0.02369 0.07368 0.26942 ...
   ..- attr(*, "names")= chr [1:6] "redirect" "namelookup" "connect" "pretransfer" ...
  $ request    :List of 7
   ..$ method    : chr "GET"
@@ -229,10 +229,9 @@ Attaching package: 'dplyr'</code></pre>
 # ℹ 44,069 more rows</code></pre>
 </div>
 </div>
-<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</p>
-<p>Now, we need a function that can query the API and allow the user to change a few things. To do this, we wrote a function that requires that the year be between 2010 and 2022, includes at least one variable other than PWGTP, specifies categorical variables to be returned, specifies geography level, and allows for optional subsetting of the data. We wrote a function that does these things, then validated the inputs.</p>
+<p>Now, we need a function that can query the API and allow the user to change a few things. To do this, we wrote a function that requires that the year be between 2010 and 2022, includes at least one variable other than PWGTP, specifies categorical variables to be returned, specifies geography level, and allows for optional subsetting of the data. We wrote a function that does these things, then validated the inputs and returned a tibble.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>pums_query <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">year =</span> <span class="dv">2022</span>, <span class="at">numeric_variables =</span> <span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"PWGTP"</span>), <span class="at">categorical_variables =</span> <span class="fu">c</span>(<span class="st">"SEX"</span>), <span class="at">geography =</span> <span class="st">"All"</span>, <span class="at">filter =</span> <span class="cn">NULL</span>){</span>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>pums_query <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">year =</span> <span class="dv">2022</span>, <span class="at">numeric_variables =</span> <span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"PWGTP"</span>), <span class="at">categorical_variables =</span> <span class="fu">c</span>(<span class="st">"SEX"</span>), <span class="at">geography =</span> <span class="st">"state"</span>, <span class="at">state =</span> <span class="st">"03"</span>, <span class="at">filter =</span> <span class="cn">NULL</span>){</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="sc">!</span>(year <span class="sc">%in%</span> <span class="dv">2010</span><span class="sc">:</span><span class="dv">2022</span>)){</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Year is not valid"</span>)</span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  }</span>
@@ -245,10 +244,29 @@ Attaching package: 'dplyr'</code></pre>
 <span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">length</span>(categorical_variables) <span class="sc">&lt;</span> <span class="dv">1</span>){</span>
 <span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"A categorical variable must be requested"</span>)</span>
 <span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="sc">!</span>(geography <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"All"</span>, <span class="st">"Region"</span>, <span class="st">"Division"</span>, <span class="st">"State"</span>))){</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="sc">!</span>(<span class="fu">tolower</span>(geography) <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"all"</span>, <span class="st">"region"</span>, <span class="st">"division"</span>, <span class="st">"state"</span>))){</span>
 <span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Must specify geography level"</span>)</span>
 <span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="sc">!</span>(state <span class="sc">%in%</span> <span class="fu">sprintf</span>(<span class="st">"%02d"</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">56</span>))){</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"State must be 2 digit code between 01 and 56"</span>)</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>  variables <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="fu">c</span>(numeric_variables, categorical_variables, <span class="st">"ST"</span>), <span class="at">collapse =</span> <span class="st">","</span>)</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>  build_url <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"https://api.census.gov/data/"</span>, year, <span class="st">"/acs/acs1/pums?get="</span>, variables)</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>  url_result <span class="ot">&lt;-</span> <span class="fu">GET</span>(build_url)</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">status_code</span>(url_result) <span class="sc">!=</span> <span class="dv">200</span>){</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Request failed with status: "</span>, <span class="fu">status_code</span>(url_result))</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>  census_tibble <span class="ot">&lt;-</span> <span class="fu">fromJSON</span>(<span class="fu">rawToChar</span>(url_result<span class="sc">$</span>content))</span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(census_tibble) <span class="ot">&lt;-</span> census_tibble[<span class="dv">1</span>,]</span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>  census_tibble <span class="ot">&lt;-</span> <span class="fu">as_tibble</span>(census_tibble[<span class="sc">-</span><span class="dv">1</span>,])</span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>  census_tibble <span class="ot">&lt;-</span> census_tibble[census_tibble<span class="sc">$</span>ST <span class="sc">==</span> state,]</span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(census_tibble)</span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <blockquote class="blockquote">
 <blockquote class="blockquote">
@@ -300,7 +318,7 @@ Attaching package: 'dplyr'</code></pre>
     curve(expr = x, from = from, to = to, xlim = xlim, ylab = ylab, 
         ...)
 }
-&lt;bytecode: 0x124b8b8a8&gt;
+&lt;bytecode: 0x12102c898&gt;
 &lt;environment: namespace:graphics&gt;</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getS3method</span>(<span class="st">"plot"</span>,<span class="st">"data.frame"</span>) <span class="co">#what is used for a class = data frame</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -325,14 +343,14 @@ Attaching package: 'dplyr'</code></pre>
         pairs(data.matrix(x), ...)
     }
 }
-&lt;bytecode: 0x124bd58e0&gt;
+&lt;bytecode: 0x1210748d0&gt;
 &lt;environment: namespace:graphics&gt;</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>plot</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>function (x, y, ...) 
 UseMethod("plot")
-&lt;bytecode: 0x12196b338&gt;
+&lt;bytecode: 0x1102ef848&gt;
 &lt;environment: namespace:base&gt;</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Add our own class to our census data for summarizing purposes.</span></span>
