@@ -1,0 +1,172 @@
+---
+title: "Project1"
+format: html
+editor: visual
+---
+
+
+
+## Data Processing
+
+
+
+```{r}
+library(httr)
+library(jsonlite)
+library(dplyr)
+library(tidyverse)
+```
+
+
+
+Using PUMS data from the Census API, we are going to complete the data processing part of Project 1. First we will read in the data, then create some functions to query the API and return a tibble. The following code chunk is reading in the data, then checking the structure so we can figure out how to turn it into a tibble.
+
+
+
+```{r}
+pums_URL <- "https://api.census.gov/data/2022/acs/acs1/pums?get=SEX,PWGTP,MAR&SCHL=24"
+pums_data <- httr::GET(pums_URL)
+str(pums_data)
+```
+
+
+
+Next, we need to write a helper function that can take the output of GET() and turn it into a tibble. The function was written generally, so it can be used for any Census API query. Then, we plugged in the PUMS data to return a tibble.
+
+
+
+```{r}
+clean_census <- function(res) {
+  pums_parsed <- fromJSON(rawToChar(res$content))
+  colnames(pums_parsed) <- pums_parsed[1,]
+  pums_info <- as_tibble(pums_parsed[-1,])
+  return(pums_info)
+}
+pums_info <- clean_census(pums_data)
+pums_info
+```
+
+
+
+Now, we need a function that can query the API and allow the user to change a few things. To do this, we wrote a function that requires that the year be between 2010 and 2022, includes at least one variable other than PWGTP, specifies categorical variables to be returned, specifies geography level, and allows for optional subsetting of the data. We wrote a function that does these things, then validated the inputs and returned a tibble.
+
+
+
+```{r}
+pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), categorical_variables = c("SEX"), geography = "state", state = "03", filter = NULL){
+  if(!(year %in% 2010:2022)){
+    stop("Year is not valid")
+  }
+  if(!("PWGTP" %in% numeric_variables)){
+    stop("PWGTP must be in numeric_variables")
+  }
+  if(length(numeric_variables) < 2){
+    stop("Another numeric variable must be requested")
+  }
+  if(length(categorical_variables) < 1){
+    stop("A categorical variable must be requested")
+  }
+  if(!(tolower(geography) %in% c("all", "region", "division", "state"))){
+    stop("Must specify geography level")
+  }
+  if(!(state %in% sprintf("%02d", 1:56))){
+    stop("State must be 2 digit code between 01 and 56")
+  }
+  variables <- paste(c(numeric_variables, categorical_variables, "ST"), collapse = ",")
+  build_url <- paste0("https://api.census.gov/data/", year, "/acs/acs1/pums?get=", variables)
+  
+  url_result <- GET(build_url)
+  if(status_code(url_result) != 200){
+    stop("Request failed with status: ", status_code(url_result))
+  }
+  
+  
+  census_tibble <- fromJSON(rawToChar(url_result$content))
+  colnames(census_tibble) <- census_tibble[1,]
+  census_tibble <- as_tibble(census_tibble[-1,])
+  census_tibble <- census_tibble[census_tibble$ST == state,]
+  
+  return(census_tibble)
+}
+```
+
+
+
+The last function was able to return a tibble for a single year of data, but now we are going to make a multiyear function.
+
+
+
+```{r}
+pums_multi_year <- function(years = 2022, numeric_variables = c("AGEP", "PWGTP"), categorical_variables = c("SEX"), geography = "state", state = "03", filter = NULL){
+  years <- as.integer(years)
+  all_data <- list()
+  for(yr in years){
+    test_tibble <- pums_query(
+      year = yr, numeric_variables = numeric_variables, categorical_variables = categorical_variables, geography = geography, state = state, filter = filter
+    )
+    test_tibble$year <- yr
+    all_data[[as.character(yr)]] <- test_tibble
+  }
+  combined_data <- dplyr::bind_rows(all_data)
+  return(combined_data)
+}
+```
+
+
+
+Now, we need to call the function to create a tibble to work with in the next section. 
+
+
+
+```{r}
+sample_data <- pums_query(
+  year = 2022, numeric_variables = c("AGEP", "PWGTP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP"), categorical_variables = c("SEX", "FER", "HHL", "HISPEED", "JWTRNS", "SCH", "SCHL"), state = "37"
+)
+sample_data
+```
+
+
+
+Now to test the multi-year function.
+
+
+
+```{r}
+sample_multi_year <- pums_multi_year(
+  years = 2018:2022, numeric_variables = c("AGEP", "PWGTP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP"), categorical_variables = c("SEX", "FER", "HHL", "HISPEED", "JWTRNS", "SCH", "SCHL"), state = "37"
+)
+```
+
+
+
+
+#Writing a Generic Function for Summarizing
+
+
+
+```{r}
+library(dplyr)
+#Run these in your console
+plot.function #what is used for a class = function
+getS3method("plot","data.frame") #what is used for a class = data frame
+plot
+#Add our own class to our census data for summarizing purposes.
+class(pums_info) <- c("census", class(pums_info))
+#check structure of tibble
+str(pums_info)
+summary.census <- function(census, numeric_vector, car_vars){
+#assigning weight to the column PWGTP in the data
+  weight <- census$PWGTP
+# numeric summaries
+ 
+  
+  numeric_summary<-list(mean=x,sd=y)
+ 
+# categorical summaries
+    
+}
+
+#summarize_census(census, c(income, age), c(gender, education))
+
+```
+
