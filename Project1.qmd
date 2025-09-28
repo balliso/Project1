@@ -95,7 +95,18 @@ pums_multi_year <- function(years = 2022, numeric_variables = c("AGEP", "PWGTP")
 Now, we need to call the function to create a tibble to work with in the next section. 
 
 ```{r}
+sample_data <- pums_query(
+  year = 2022, numeric_variables = c("AGEP", "PWGTP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP"), categorical_variables = c("SEX", "FER", "HHL", "HISPEED", "JWTRNS", "SCH", "SCHL"), state = "37"
+)
+sample_data
+```
 
+Now to test the multi-year function.
+
+```{r}
+sample_multi_year <- pums_multi_year(
+  years = 2018:2022, numeric_variables = c("AGEP", "PWGTP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP"), categorical_variables = c("SEX", "FER", "HHL", "HISPEED", "JWTRNS", "SCH", "SCHL"), state = "37"
+)
 ```
 
 
