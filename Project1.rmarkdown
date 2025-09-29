@@ -4,7 +4,11 @@ format: html
 editor: visual
 ---
 
+
+
 ## Data Processing
+
+
 
 ```{r}
 library(httr)
@@ -13,7 +17,11 @@ library(dplyr)
 library(tidyverse)
 ```
 
+
+
 Using PUMS data from the Census API, we are going to complete the data processing part of Project 1. First we will read in the data, then create some functions to query the API and return a tibble. The following code chunk is reading in the data, then checking the structure so we can figure out how to turn it into a tibble.
+
+
 
 ```{r}
 pums_URL <- "https://api.census.gov/data/2022/acs/acs1/pums?get=SEX,PWGTP,MAR&SCHL=24"
@@ -21,7 +29,11 @@ pums_data <- httr::GET(pums_URL)
 str(pums_data)
 ```
 
+
+
 Next, we need to write a helper function that can take the output of GET() and turn it into a tibble. The function, clean_census(), was written generally, so it can be used to turn any Census API query response into a tibble, which keeps the code reusable. Then, we plugged in some PUMS data to see how it returns a sample tibble.
+
+
 
 ```{r}
 clean_census <- function(res) {
@@ -34,7 +46,11 @@ pums_info <- clean_census(pums_data)
 pums_info
 ```
 
+
+
 Now, we need a function that can query the API and allow the user to change a few things. To do this, we wrote a function that requires that the year be between 2010 and 2022, includes at least one variable other than PWGTP, specifies categorical variables to be returned, specifies geography level, and allows for optional subsetting of the data. Our function, pums_query(), checks that the inputs are valid which helps to avoid API errors. 
+
+
 
 ```{r}
 pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), categorical_variables = c("SEX"), geography = "state", state = "37", filter = NULL){
@@ -73,7 +89,11 @@ pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), cate
 }
 ```
 
+
+
 The last function was able to return a tibble for a single year of data, but now we are going to make a multiyear function. Pums_multi_year() loops over each requested year, calls pums_query() for each, and combines the results into a single tibble with a year column. This allows for comparison across years.
+
+
 
 ```{r}
 
@@ -92,7 +112,11 @@ pums_multi_year <- function(years = 2022, numeric_variables = c("AGEP", "PWGTP")
 }
 ```
 
+
+
 Now, we need to call the function to create a tibble to work with in the next section. 
+
+
 
 ```{r}
 sample_data <- pums_query(
@@ -106,7 +130,11 @@ sample_data <- sample_data |>
 head(sample_data)
 ```
 
+
+
 Now to test the multi-year function.
+
+
 
 ```{r}
 sample_multi_year <- pums_multi_year(
@@ -124,7 +152,11 @@ sample_multi_year <- sample_multi_year |>
 
 
 
+
+
 #Writing a Generic Function for Summarizing
+
+
 
 
 
@@ -195,3 +227,4 @@ summary.census(sample_data)
 #summarize_census(census, c(income, age), c(gender, education))
 
 ```
+
