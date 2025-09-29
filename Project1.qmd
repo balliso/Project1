@@ -11,6 +11,7 @@ library(httr)
 library(jsonlite)
 library(dplyr)
 library(tidyverse)
+library(lubridate)
 ```
 
 Using PUMS data from the Census API, we are going to complete the data processing part of Project 1. First we will read in the data, then create some functions to query the API and return a tibble. The following code chunk is reading in the data, then checking the structure so we can figure out how to turn it into a tibble.
@@ -69,9 +70,22 @@ pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), cate
   census_tibble <- as_tibble(census_tibble[-1,])
   census_tibble <- census_tibble[census_tibble$ST == state,]
   
+  numeric_options <- c("AGEP", "GASP", "GRPIP", "PWGTP", "JWMNP")
+  numeric_values <- intersect(numeric_options, numeric_variables)
+  census_tibble[numeric_values] <- lapply(census_tibble[numeric_values], as.numeric)
+  
+  time_options <- c("JWAP", "JWDP")
+  time_values <- intersect(time_options, numeric_variables)
+  
+  
   return(census_tibble)
 }
 ```
+
+```{r}
+pums_query()
+```
+
 
 Now, we need to call the function to create a tibble to work with in the next section. 
 
