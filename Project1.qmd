@@ -35,7 +35,7 @@ pums_info <- clean_census(pums_data)
 pums_info
 ```
 
-This code chunk contains some setup for the next function. 
+This code chunk contains some setup for the next function.
 
 ```{r}
 jwap_url <- "https://api.census.gov/data/2022/acs/acs1/pums/variables/JWAP.json"
@@ -47,6 +47,8 @@ jwdp_url <- "https://api.census.gov/data/2022/acs/acs1/pums/variables/JWDP.json"
 jwdp_blob <- fromJSON(url)
 jwdp_lookup <- jwdp_blob$values$item
 names(jwdp_lookup) <- as.numeric(names(jwdp_lookup))
+
+#the following code is used to turn a given categorical variable into a factor with appropriate levels. I saved each variable as a list of it's items, then saved all of those variables in a list
 
 FER_labels <- c("0" = "N/A (less than 15 years/greater than 50 years/ male)", "1" = "Yes", "2" = "No")
 
@@ -153,7 +155,7 @@ pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), cate
 }
 ```
 
-Now, we need to call the function to create a tibble to work with in the next section. 
+Now, we need to call the function to create a tibble to work with in a later section.
 
 ```{r}
 sample_data <- pums_query(
@@ -180,20 +182,6 @@ pums_multi_year <- function(years = 2022, numeric_variables = c("AGEP", "PWGTP")
 }
 ```
 
-Now, we need to call the function to create a tibble to work with in the next section. 
-
-```{r}
-sample_data <- pums_query(
-  year = 2022, numeric_variables = c("AGEP", "PWGTP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP"), categorical_variables = c("SEX", "FER", "HHL", "HISPEED", "JWTRNS", "SCH", "SCHL"), state = "37"
-)
-# Convert numerics to double and categoricals to character
-sample_data <- sample_data |>
-  mutate(across(c(AGEP, PWGTP, GASP, GRPIP, JWAP, JWDP, JWMNP), as.double),
-         across(c(SEX, FER, HHL, HISPEED, SCH, SCHL), as.character))
-
-head(sample_data)
-```
-
 Now to test the multi-year function.
 
 ```{r}
@@ -208,12 +196,7 @@ sample_multi_year <- sample_multi_year |>
          across(c(SEX, FER, HHL, HISPEED, SCH, SCHL), as.character))
 ```
 
-
-
-
-#Writing a Generic Function for Summarizing
-
-
+## Writing a Generic Function for Summarizing
 
 ```{r}
 library(dplyr)
