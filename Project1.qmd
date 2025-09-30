@@ -153,12 +153,6 @@ pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), cate
 }
 ```
 
-
-```{r}
-pums_query(numeric_variables = c("JWAP", "PWGTP"), categorical_variables = c("SEX"))
-```
-
-
 Now, we need to call the function to create a tibble to work with in the next section. 
 
 ```{r}
