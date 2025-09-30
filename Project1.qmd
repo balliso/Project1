@@ -38,6 +38,17 @@ pums_info
 Now, we need a function that can query the API and allow the user to change a few things. To do this, we wrote a function that requires that the year be between 2010 and 2022, includes at least one variable other than PWGTP, specifies categorical variables to be returned, specifies geography level, and allows for optional subsetting of the data. Our function, pums_query(), checks that the inputs are valid which helps to avoid API errors. We used state '37' instead of our assigned state '03' because that state code was invalid.
 
 ```{r}
+jwap_url <- "https://api.census.gov/data/2022/acs/acs1/pums/variables/JWAP.json"
+jwap_blob <- fromJSON(jwap_url)
+jwap_lookup <- jwap_blob$values$item
+names(jwap_lookup) <- as.numeric(names(jwap_lookup))
+
+jwdp_url <- "https://api.census.gov/data/2022/acs/acs1/pums/variables/JWDP.json"
+jwdp_blob <- fromJSON(url)
+jwdp_lookup <- jwdp_blob$values$item
+names(jwdp_lookup) <- as.numeric(names(jwdp_lookup))
+
+
 pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), categorical_variables = c("SEX"), geography = "state", state = "37", filter = NULL){
   if(!(year %in% 2010:2022)){
     stop("Year is not valid")
@@ -77,13 +88,32 @@ pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), cate
   time_options <- c("JWAP", "JWDP")
   time_values <- intersect(time_options, numeric_variables)
   
+  time_convert <- function(date_range){
+    if (startsWith(date_range, "N")) return(NA)
+    times <- strsplit(date_range, " to ")[[1]]
+    start_time <- period_to_seconds(hm(times[1]))
+    end_time <- period_to_seconds(hm(times[2]))
+    if (end_time < start_time) end_time <- end_time + 24*3600
+    seconds <- (start_time + end_time) / 2
+    time <- as.POSIXct(seconds, origin = "1970-01-01", tz = "UTC")
+    return(format(time, "%H:%M:%S %p"))
+  }
+  
+  if ("JWAP" %in% names(census_tibble)){
+    census_tibble[["JWAP"]] <- sapply(census_tibble[["JWAP"]], function(x) time_convert(jwap_lookup[[x]]))
+  }
+  
+  if ("JWDP" %in% names(census_tibble)){
+    census_tibble[["JWDP"]] <- sapply(census_tibble[["JWDP"]], function(x) time_convert(jwdp_lookup[[x]]))
+  }
   
   return(census_tibble)
 }
 ```
 
+
 ```{r}
-pums_query()
+pums_query(numeric_variables = c("JWAP", "PWGTP"))
 ```
 
 
