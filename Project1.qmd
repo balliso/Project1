@@ -34,7 +34,7 @@ pums_info <- clean_census(pums_data)
 pums_info
 ```
 
-Now, we need a function that can query the API and allow the user to change a few things. To do this, we wrote a function that requires that the year be between 2010 and 2022, includes at least one variable other than PWGTP, specifies categorical variables to be returned, specifies geography level, and allows for optional subsetting of the data. Our function, pums_query(), checks that the inputs are valid which helps to avoid API errors. 
+Now, we need a function that can query the API and allow the user to change a few things. To do this, we wrote a function that requires that the year be between 2010 and 2022, includes at least one variable other than PWGTP, specifies categorical variables to be returned, specifies geography level, and allows for optional subsetting of the data. Our function, pums_query(), checks that the inputs are valid which helps to avoid API errors. We used state '37' instead of our assigned state '03' because that state code was invalid.
 
 ```{r}
 pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), categorical_variables = c("SEX"), geography = "state", state = "37", filter = NULL){
@@ -73,10 +73,18 @@ pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), cate
 }
 ```
 
+Now, we need to call the function to create a tibble to work with in the next section. 
+
+```{r}
+sample_data <- pums_query(
+  year = 2022, numeric_variables = c("AGEP", "PWGTP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP"), categorical_variables = c("SEX", "FER", "HHL", "HISPEED", "JWTRNS", "SCH", "SCHL"), state = "37"
+)
+head(sample_data)
+```
+
 The last function was able to return a tibble for a single year of data, but now we are going to make a multiyear function. Pums_multi_year() loops over each requested year, calls pums_query() for each, and combines the results into a single tibble with a year column. This allows for comparison across years.
 
 ```{r}
-
 pums_multi_year <- function(years = 2022, numeric_variables = c("AGEP", "PWGTP"), categorical_variables = c("SEX"), geography = "state", state = "37", filter = NULL){
   years <- as.integer(years)
   all_data <- list()
@@ -118,7 +126,6 @@ head(sample_multi_year)
 sample_multi_year <- sample_multi_year |>
   mutate(across(c(AGEP, PWGTP, GASP, GRPIP, JWAP, JWDP, JWMNP), as.double),
          across(c(SEX, FER, HHL, HISPEED, SCH, SCHL), as.character))
-
 ```
 
 
