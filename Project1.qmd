@@ -35,7 +35,7 @@ pums_info <- clean_census(pums_data)
 pums_info
 ```
 
-Now, we need a function that can query the API and allow the user to change a few things. To do this, we wrote a function that requires that the year be between 2010 and 2022, includes at least one variable other than PWGTP, specifies categorical variables to be returned, specifies geography level, and allows for optional subsetting of the data. Our function, pums_query(), checks that the inputs are valid which helps to avoid API errors. We used state '37' instead of our assigned state '03' because that state code was invalid.
+This code chunk contains some setup for the next function. 
 
 ```{r}
 jwap_url <- "https://api.census.gov/data/2022/acs/acs1/pums/variables/JWAP.json"
@@ -48,7 +48,28 @@ jwdp_blob <- fromJSON(url)
 jwdp_lookup <- jwdp_blob$values$item
 names(jwdp_lookup) <- as.numeric(names(jwdp_lookup))
 
+FER_labels <- c("0" = "N/A (less than 15 years/greater than 50 years/ male)", "1" = "Yes", "2" = "No")
 
+HHL_labels <- c("0" = "N/A (GQ/vacant)", "1" = "English Only", "2" = "Spanish", "3" = "Other Indo-European languages", "4" = "Asian and Pacific Island languages", "5" = "Other Language")
+
+HISPEED_labels <- c("0" = "N/A (GQ/vacant/no paid access to the internet)", "1" = "Yes", "2" = "No")
+
+JWTRNS_labels <- c("0" = "N/A (not a worker-not in the labor force, including persons under 16 years; unemployed; employed, with a job but not at work; Armed Forces, with a job but not at work)", "1" = "Car, truck, or van", "2" = "Bus", "3" = "Subway or elevated rail", "4" = "Long-distance train or commuter rail", "5" = "Light rail, streetcar, or trolley", "6" = "Ferryboat", "7" = "Taxicab", "8" = "Motorcycle", "9" = "Bicycle", "10" = "Walked", "11" = "Worked from home", "12" = "Other method")
+
+SCH_labels <- c("0" = "N/A (less than 3 years old)", "1" = "No, has not attended in the last 3 months", "2" = "Yes, public school or public college", "3" = "Yes, private school or college or home school")
+
+SCHL_labels <- c("0" = "N/A (less than 3 years old)", "1" = "No schooling completed", "2" = "Nursery school, preschool", "3" = "Kindergarten", "4" = "Grade 1", "5" = "Grade 2", "6" = "Grade 3", "7" = "Grade 4", "8" = "Grade 5", "9" = "Grade 6", "10" = "Grade 7", "11" = "Grade 8", "12" = "Grade 9", "13" = "Grade 10", "14" = "Grade 11", "15" = "12th grade - no diploma", "16" = "Regular high school diploma", "17" = "GED or alternative credential", "18" = "Some college, but less than 1 year", "19" = "1 or more years of college credit, no degree", "20" = "Associate's degree", "21" = "Bachelor's degree", "22" = "Master's degree", "23" = "Professional degree beyond a bachelor's degree", "24" = "Doctorate degree")
+
+SEX_labels <- c("1" = "Male", "2" = "Female")
+
+label_mappings <- list(
+  "FER" = FER_labels, "HHL" = HHL_labels, "HISPEED" = HISPEED_labels, "JWTRNS" = JWTRNS_labels, "SCH" = SCH_labels, "SCHL" = SCHL_labels, "SEX" = SEX_labels
+)
+```
+
+Now, we need a function that can query the API and allow the user to change a few things. To do this, we wrote a function that requires that the year be between 2010 and 2022, includes at least one variable other than PWGTP, specifies categorical variables to be returned, specifies geography level, and allows for optional subsetting of the data. Our function, pums_query(), checks that the inputs are valid which helps to avoid API errors. We used state '37' instead of our assigned state '03' because that state code was invalid.
+
+```{r}
 pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), categorical_variables = c("SEX"), geography = "state", state = "37", filter = NULL){
   if(!(year %in% 2010:2022)){
     stop("Year is not valid")
@@ -102,9 +123,30 @@ pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), cate
   if ("JWAP" %in% names(census_tibble)){
     census_tibble[["JWAP"]] <- sapply(census_tibble[["JWAP"]], function(x) time_convert(jwap_lookup[[x]]))
   }
-  
   if ("JWDP" %in% names(census_tibble)){
     census_tibble[["JWDP"]] <- sapply(census_tibble[["JWDP"]], function(x) time_convert(jwdp_lookup[[x]]))
+  }
+  
+  if ("FER" %in% names(census_tibble)){
+    census_tibble[["FER"]] <- factor(census_tibble[["FER"]], levels = names(FER_labels), labels = FER_labels)
+  }
+  if ("HHL" %in% names(census_tibble)){
+    census_tibble[["HHL"]] <- factor(census_tibble[["HHL"]], levels = names(HHL_labels), labels = HHL_labels)
+  }
+  if ("HISPEED" %in% names(census_tibble)){
+    census_tibble[["HISPEED"]] <- factor(census_tibble[["HISPEED"]], levels = names(HISPEED_labels), labels = HISPEED_labels)
+  }
+  if ("JWTRNS" %in% names(census_tibble)){
+    census_tibble[["JWTRNS"]] <- factor(census_tibble[["JWTRNS"]], levels = names(JWTRNS_labels), labels = JWTRNS_labels)
+  }
+  if ("SCH" %in% names(census_tibble)){
+    census_tibble[["SCH"]] <- factor(census_tibble[["SCH"]], levels = names(SCH_labels), labels = SCH_labels)
+  }
+  if ("SCHL" %in% names(census_tibble)){
+    census_tibble[["SCHL"]] <- factor(census_tibble[["SCHL"]], levels = names(SCHL_labels), labels = SCHL_labels)
+  }
+  if ("SEX" %in% names(census_tibble)){
+    census_tibble[["SEX"]] <- factor(census_tibble[["SEX"]], levels = names(SEX_labels), labels = SEX_labels)
   }
   
   return(census_tibble)
@@ -113,7 +155,7 @@ pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), cate
 
 
 ```{r}
-pums_query(numeric_variables = c("JWAP", "PWGTP"))
+pums_query(numeric_variables = c("JWAP", "PWGTP"), categorical_variables = c("SEX"))
 ```
 
 
