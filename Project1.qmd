@@ -50,7 +50,7 @@ jwap_lookup <- jwap_blob$values$item
 names(jwap_lookup) <- as.numeric(names(jwap_lookup))
 
 jwdp_url <- "https://api.census.gov/data/2022/acs/acs1/pums/variables/JWDP.json"
-jwdp_blob <- fromJSON(url)
+jwdp_blob <- fromJSON(jwdp_url)
 jwdp_lookup <- jwdp_blob$values$item
 names(jwdp_lookup) <- as.numeric(names(jwdp_lookup))
 ```
@@ -238,11 +238,11 @@ plot
 #Add our own class to our census data for summarizing purposes.
 class(sample_data) <- c("census", class(sample_data))
 
-summary.census <- function(census, numeric_var=NULL, car_var=NULL){
+summary.census <- function(census, numeric_var=NULL, cat_var=NULL){
   # assigning weight to the column PWGTP in the data
   weight <- census$PWGTP
   
-  if (is.null(numeric_var) & is.null(car_var)) {
+  if (is.null(numeric_var) & is.null(cat_var)) {
    numeric_cols <- names(census)[sapply(census, is.numeric)]
 
 summary <- census |>
@@ -261,12 +261,13 @@ summary <- census |>
     )
   )
    cat_counts <- census |>
+      as.data.frame() |>
       pivot_longer(
         cols = where(is.character),
         names_to = "variable",
         values_to = "value"
       ) |>
-      group_by(variable, value) |>
+      group_by(variable) |>
       summarise(weighted_count = sum(PWGTP), .groups = "drop")
 
 return(list(
@@ -275,16 +276,22 @@ return(list(
 ))
 
   } else if (is.null(numeric_var)) { 
-   cat_counts <- car_var |>
+   cat_counts <- census |>
+     select(all_of(cat_var), PWGTP) |>
       pivot_longer(
         cols = where(is.character),
         names_to = "variable",
         values_to = "value"
       ) |>
-      group_by(variable, value) |>
+      group_by(variable) |>
       summarise(weighted_count = sum(PWGTP), .groups = "drop")
+   
+   return(
+  Categorical_Counts = cat_counts
+)
+
     
-  } else if(is.null(car_var)) {
+  } else if(is.null(cat_var)) {
   
   #need to find the sample mean and standard deviation for the numerical variables they provided
     
@@ -308,7 +315,45 @@ return(list(
 ))
 
   }else{
-  return("Try input again.")
+  
+       cat_counts <- census |>
+         as.data.frame()|>
+     select(all_of(cat_var), PWGTP) |>
+      pivot_longer(
+        cols = where(is.character),
+        names_to = "variable",
+        values_to = "value"
+      ) |>
+      group_by(variable) |>
+      summarise(weighted_count = sum(PWGTP), .groups = "drop")
+   
+      
+      #need to find the sample mean and standard deviation for the numerical variables they provided
+    
+    summary <- census |>
+      as.data.frame()|>
+  reframe(
+    # Sample mean
+    across(
+      all_of(numeric_var),
+      function(x) sum(x * weight / sum(weight)),
+      .names = "{.col}_sample_mean"
+    ),
+    # Sample standard deviation
+    across(
+      all_of(numeric_var),
+      function(x) sqrt(sum(x^2 * weight) / sum(weight) - (sum(x * weight / sum(weight)))^2),
+      .names = "{.col}_sample_sd"
+    )
+  )
+      
+
+return(list(
+  Numeric_Summary = summary,
+  Categorical_Counts = cat_counts
+))
+
+    
   }
     
     
@@ -318,9 +363,9 @@ summary.census(sample_data)
 #Test of entering tibble with numeric variable
 summary.census(sample_data, numeric_var = "AGEP")
 #Test of entering tibble with categorical variable
-summary.census(sample_data, cat_var = "SEX")
+#summary.census(sample_data, cat_var = "SEX")
   #Test of entering tibble with categorical variable
-summary.census(sample_data, numeric_var = "AGEP", cat_var = "SEX")
+#summary.census(sample_data, numeric_var = "AGEP", cat_var = "SEX")
 
 
 #summarize_census(census, c(income, age), c(gender, education))
