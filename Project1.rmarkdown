@@ -6,6 +6,8 @@ output: html_document
 purpose: "Project using Census data to query, summarize, and visualize trends."
 editor: visual
 ---
+
+
 # Introduction
 
 For this project, we are working with the Census Public Use Microdata Sample API. This PUMS data
@@ -14,6 +16,8 @@ Our goal is to write a function to query this API to return a nicely formatted t
 # Data Processing
 
 In this section, we process data from the Census PUMS API. The goal is to build a set of functions that return clean tibbles that are easy to work with in R. We will explore the raw API response and create helper functions to clean and structure the data. Then, we modify the functions so a user can customize which variables and years are returned.
+
+
 
 ```{r}
 library(httr)
@@ -24,7 +28,11 @@ library(lubridate)
 library(ggplot2) 
 ```
 
+
+
 The following code chunk reads in the data and checks the structure so we can figure out how to turn it into a tibble.
+
+
 
 ```{r}
 pums_URL <- "https://api.census.gov/data/2022/acs/acs1/pums?get=SEX,PWGTP,MAR&SCHL=24"
@@ -32,7 +40,11 @@ pums_data <- httr::GET(pums_URL)
 str(pums_data)
 ```
 
+
+
 The raw output from httr::GET() is not immediately usable because it comes as JSON text with column names embedded in the first row. To fix this, we wrote a helper function called clean_census(). This function extracts the column names, removes the header row, and returns the result as a tibble. Because it is written generally, it can be reused for any Census API response.
+
+
 
 ```{r}
 clean_query_result <- function(res) {
@@ -43,7 +55,11 @@ clean_query_result <- function(res) {
 }
 ```
 
+
+
 This code chunk creates some look up tables that will be useful for turning numeric variables into time values later in the pums_query() function. 
+
+
 
 ```{r}
 # Query the API for a table describing the JWAP and JWDP categorical variables and then create lookup tables to turn numeric variables into time variables later
@@ -59,7 +75,11 @@ jwdp_lookup <- jwdp_blob$values$item
 names(jwdp_lookup) <- as.numeric(names(jwdp_lookup))
 ```
 
+
+
 This code chunk creates some lists that will be useful for turning categorical variables into factors with appropriate levels later in the pums_query() function. 
+
+
 
 ```{r}
 # Save categorical variables as lists to turn into a factor with appropriate levels later
@@ -79,7 +99,11 @@ SCHL_labels <- c("0" = "N/A (less than 3 years old)", "1" = "No schooling comple
 SEX_labels <- c("1" = "Male", "2" = "Female")
 ```
 
+
+
 Now, we need a function that can query the API and allow the user to change a few things. To do this, we wrote a function that requires that the year be between 2010 and 2022, includes at least one variable other than PWGTP, specifies categorical variables to be returned, specifies geography level, and allows for optional subsetting of the data. Our function, pums_query(), checks that the inputs are valid which helps to avoid API errors. We used state '37' instead of our assigned state '03' because that state code was invalid.
+
+
 
 ```{r}
 # Query the API; we used state code 37 because 03 was invalid
@@ -185,7 +209,11 @@ pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), cate
 }
 ```
 
+
+
 Now, we can test the data with some different variables.
+
+
 
 ```{r}
 sample_data <- pums_query(
@@ -194,7 +222,11 @@ sample_data <- pums_query(
 head(sample_data)
 ```
 
+
+
 The last function was able to return a tibble for a single year of data, but now we are going to make a multi-year function. Pums_multi_year() loops over each requested year, calls pums_query() for each, and combines the results into a single tibble with a year column. This allows for comparison across years.
+
+
 
 ```{r}
 # Create a function that calls the single year function as many times as needed and combines into one final tibble
@@ -220,7 +252,11 @@ pums_multi_year <- function(years, numeric_variables = c("AGEP", "PWGTP"), categ
 }
 ```
 
+
+
 Now to test the multi-year function.
+
+
 
 ```{r}
 sample_multi_year <- pums_multi_year(
@@ -230,10 +266,14 @@ head(sample_multi_year)
 ```
 
 
+
+
 #Writing a Generic Function for Summarizing
 
 Here we write a general function for summarizing. This function takes in three arguments: the tibble with class census, the numeric variable(s) to summarize, and the categorical variable(s) to summarize. By default, this function summarizes all numeric variables (other than PWGTP) and all categorical variables
 in the tibble. However, the user may also specify the variables they’d like to summarize. For numerical variables, the function will give the sample mean and standard deviation, and for categorigal variables the function returns the counts. Here we also write a general function for plotting, where the user to specify one categorical variable and one numeric variable for plotting purposes.
+
+
 
 ```{r}
 #check structure of tibble
@@ -410,9 +450,13 @@ summary_census(sample_data, numeric_var = c("GRPIP", "JWMNP"), cat_var = c("HHL"
 
 
 ```
+
+
 #Plotting
 
 Here we write a general function for plotting, where the user to specify one categorical variable and one numeric variable for plotting purposes.
+
+
 
 ```{r}
 #Run these in your console
@@ -431,9 +475,13 @@ census_plot(sample_data, cat_var = "SEX", num_var = "AGEP")
 
 ```
 
+
+
 # Data Investigation
 
 For this investigation, we will investigate if there appears to be a relationship between household internet access and age in North Carolina in 2022. Are young people more likely to have household internet access?
+
+
 
 ```{r}
 # Query the API
@@ -446,4 +494,6 @@ summary_census(nc_data, numeric_var = "AGEP", cat_var ="HISPEED")
 census_plot(nc_data, cat_var = "HISPEED", num_var = "AGEP")
 
 ```
+
+
 Looking at the graph, it does appear that the median age of those that have high speed internet is lower than the median age of those who answered no or N/A. 
