@@ -1,6 +1,9 @@
 ---
 title: "Project1"
-format: html
+author: "Bailey Allison & Laurie Short"
+date: "2025-10-01"
+output: html_document
+purpose: "Project using Census data to query, summarize, and visualize trends."
 editor: visual
 ---
 # Introduction
@@ -18,6 +21,7 @@ library(jsonlite)
 library(dplyr)
 library(tidyverse)
 library(lubridate)
+library(ggplot2) 
 ```
 
 The following code chunk reads in the data and checks the structure so we can figure out how to turn it into a tibble.
@@ -221,7 +225,7 @@ head(sample_multi_year)
 ```
 
 
-#Writing a Generic Function for Summarizing and Plotting
+#Writing a Generic Function for Summarizing
 
 Here we write a general function for summarizing. This function takes in three arguments: the tibble with class census, the numeric variable(s) to summarize, and the categorical variable(s) to summarize. By default, this function summarizes all numeric variables (other than PWGTP) and all categorical variables
 in the tibble. However, the user may also specify the variables they’d like to summarize. For numerical variables, the function will give the sample mean and standard deviation, and for categorigal variables the function returns the counts. Here we also write a general function for plotting, where the user to specify one categorical variable and one numeric variable for plotting purposes.
@@ -231,17 +235,20 @@ library(dplyr)
 #check structure of tibble
 str(sample_data)
 
-#Run these in your console
-plot.function #what is used for a class = function
-getS3method("plot","data.frame") #what is used for a class = data frame
-plot
 #Add our own class to our census data for summarizing purposes.
 class(sample_data) <- c("census", class(sample_data))
 
-summary.census <- function(census, numeric_var=NULL, cat_var=NULL){
+#Naming all possible categorical variables for the function
+all_cat_vars <- c("SEX", "FER", "HHL", "HISPEED", "SCH", "SCHL")
+
+#Naming all possible numerical variables for the funciton
+all_num_vars <- c("AGEP", "PWGTP", "GASP", "GRPIP", "JWMNP")
+
+#function takes in tibble, numeric variables, categorical variables
+summary_census <- function(census, numeric_var=NULL, cat_var=NULL){
   # assigning weight to the column PWGTP in the data
   weight <- census$PWGTP
-  
+  #this first if will give back everything by defalut if no numeric or categorical variables are entered
   if (is.null(numeric_var) & is.null(cat_var)) {
    numeric_cols <- names(census)[sapply(census, is.numeric)]
 
@@ -249,48 +256,53 @@ summary <- census |>
   reframe(
     # Sample mean
     across(
-      all_of(numeric_cols),
-      function(x) sum(x * weight / sum(weight)),
+      all_of(c("AGEP", "GASP", "GRPIP", "JWMNP")),
+      function(x) sum(x * weight, na.rm = TRUE) / sum(weight, na.rm = TRUE),
       .names = "{.col}_sample_mean"
     ),
     # Sample standard deviation
     across(
-      all_of(numeric_cols),
-      function(x) sqrt(sum(x^2 * weight) / sum(weight) - (sum(x * weight / sum(weight)))^2),
+      all_of(c("AGEP", "GASP", "GRPIP", "JWMNP")),
+      function(x) sqrt(sum((x)^2 * weight, na.rm = TRUE) / sum(weight, na.rm = TRUE) -
+         (sum(x * weight, na.rm = TRUE) / sum(weight, na.rm = TRUE))^2),
       .names = "{.col}_sample_sd"
     )
   )
+  #here we count the categorical variables
    cat_counts <- census |>
       as.data.frame() |>
-      pivot_longer(
-        cols = where(is.character),
-        names_to = "variable",
-        values_to = "value"
-      ) |>
-      group_by(variable) |>
+     select(c("SEX", "FER", "HHL", "HISPEED", "SCH", "SCHL", "PWGTP")) |>
+  pivot_longer(
+    cols = c("SEX", "FER", "HHL", "HISPEED", "SCH", "SCHL"),
+    names_to = "variable",
+    values_to = "value"
+  ) |>
+      group_by(variable, value) |>
       summarise(weighted_count = sum(PWGTP), .groups = "drop")
-
+#here we return the numerical and categorical summaries
 return(list(
   Numeric_Summary = summary,
   Categorical_Counts = cat_counts
 ))
-
+   
+#this handles if the user does not submit any numeric variables, only categorical. It will provide the counts for the categorical variables they provided 
+   
   } else if (is.null(numeric_var)) { 
    cat_counts <- census |>
-     select(all_of(cat_var), PWGTP) |>
+     select(all_cat_vars, PWGTP) |>
       pivot_longer(
-        cols = where(is.character),
+       cols = all_of(cat_var),
         names_to = "variable",
         values_to = "value"
       ) |>
-      group_by(variable) |>
+      group_by(variable, value) |>
       summarise(weighted_count = sum(PWGTP), .groups = "drop")
    
    return(
   Categorical_Counts = cat_counts
 )
 
-    
+#this handles if the user does not submit any categorical variables, only numerical It will provide the summaries for the numerical variables they provided 
   } else if(is.null(cat_var)) {
   
   #need to find the sample mean and standard deviation for the numerical variables they provided
@@ -314,17 +326,17 @@ return(list(
   Numeric_Summary = summary
 ))
 
+    #this handles if the user enters categorical and numeric variables
   }else{
   
-       cat_counts <- census |>
-         as.data.frame()|>
-     select(all_of(cat_var), PWGTP) |>
+      cat_counts <- census |>
+     select(all_cat_vars, PWGTP) |>
       pivot_longer(
-        cols = where(is.character),
+       cols = all_of(cat_var),
         names_to = "variable",
         values_to = "value"
       ) |>
-      group_by(variable) |>
+      group_by(variable, value) |>
       summarise(weighted_count = sum(PWGTP), .groups = "drop")
    
       
@@ -359,18 +371,69 @@ return(list(
     
 } 
 #Test of just entering tibble
-summary.census(sample_data)
+summary_census(sample_data)
+
 #Test of entering tibble with numeric variable
-summary.census(sample_data, numeric_var = "AGEP")
+summary_census(sample_data, numeric_var = "AGEP")
+
 #Test of entering tibble with categorical variable
-#summary.census(sample_data, cat_var = "SEX")
-  #Test of entering tibble with categorical variable
-#summary.census(sample_data, numeric_var = "AGEP", cat_var = "SEX")
+summary_census(sample_data, cat_var = "SEX")
+
+#Test of entering tibble with categorical variable
+
+summary_census(sample_data, numeric_var = "AGEP", cat_var = "SEX")
+
+#Test of entering tibble with more than one numerical variable
+
+summary_census(sample_data, numeric_var = c("AGEP", "GASP"))
+
+#Test of entering tibble with more than one categorical variable
+
+summary_census(sample_data, cat_var = c("SEX", "SCHL"))
+
+#Test of entering tibble with more than one categorical variable and more than one numeric variable
+
+summary_census(sample_data, numeric_var = c("GRPIP", "JWMNP"), cat_var = c("HHL", "HISPEED"))
 
 
-#summarize_census(census, c(income, age), c(gender, education))
+```
+#Plotting
+
+Here we write a general function for plotting, where the user to specify one categorical variable and one numeric variable for plotting purposes.
+
+```{r}
+#Run these in your console
+plot.function #what is used for a class = function
+getS3method("plot","data.frame") #what is used for a class = data frame
+plot
+
+census_plot <-function(census_data, cat_var, num_var){
+ggplot(sample_data,
+aes(x = get(cat_var), y = get(num_var), weight = PWGTP)) +
+geom_boxplot()
+}
+
+#test of plot function
+census_plot(sample_data, cat_var = "SEX", num_var = "AGEP")
 
 ```
 
-
 # Data Investigation
+
+For this investigation, we will investigate if there appears to be a relationship between household internet access and age. Are young people more likely to have household internet access?
+
+```{r}
+
+
+
+#Summarize
+summary_census(sample_data, numeric_var = "AGEP", cat_var ="HISPEED")
+
+#Plot of the variables
+
+census_plot(sample_data, num_var = "AGEP", cat_var = "HISPEED" )
+
+
+
+```
+Looking at the graph, it does appear that the median age of those that have high speed internet is lower than the median age of those who answered no or N/A. 
