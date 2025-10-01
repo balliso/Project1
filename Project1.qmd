@@ -8,8 +8,7 @@ editor: visual
 ---
 # Introduction
 
-For this project, we are working with the Census Public Use Microdata Sample API. This PUMS data
-Our goal is to write a function to query this API to return a nicely formatted tibble, and then write a summary function to summarize and visualize the data. After creating and testing our functions, we used them to investigate how JWAP and JWDP evolve over time by plotting the averages for each year.
+For this project, we are working with the Census Public Use Microdata Sample (PUMS) API. The PUMS data consists of a sample of individual records from people and housing units across America. Our goal is to write a function to query this API to return a nicely formatted tibble, and then write a summary function to summarize and visualize the data. After creating and testing our functions, we will use them to investigate the relationship between household internet access and age in North Carolina in 2022.
 
 # Data Processing
 
@@ -29,6 +28,8 @@ The following code chunk reads in the data and checks the structure so we can fi
 ```{r}
 pums_URL <- "https://api.census.gov/data/2022/acs/acs1/pums?get=SEX,PWGTP,MAR&SCHL=24"
 pums_data <- httr::GET(pums_URL)
+
+#Check structure
 str(pums_data)
 ```
 
@@ -79,7 +80,7 @@ SCHL_labels <- c("0" = "N/A (less than 3 years old)", "1" = "No schooling comple
 SEX_labels <- c("1" = "Male", "2" = "Female")
 ```
 
-Now, we need a function that can query the API and allow the user to change a few things. To do this, we wrote a function that requires that the year be between 2010 and 2022, includes at least one variable other than PWGTP, specifies categorical variables to be returned, specifies geography level, and allows for optional subsetting of the data. Our function, pums_query(), checks that the inputs are valid which helps to avoid API errors. We used state '37' instead of our assigned state '03' because that state code was invalid.
+Next, we need a function that can query the API while allowing the user to specify which data they would like to display. To do this, we wrote a function, pums_query() that allows users to specify the survey year, numeric variables, categorical variables, geography level, and optional data subsetting. Pums_query() performs type conversions which are necessary for some numeric and categorical variables. We also used checks to ensure that the inputs are valid, which helps to avoid API errors.
 
 ```{r}
 # Query the API; we used state code 37 because 03 was invalid
@@ -185,7 +186,7 @@ pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), cate
 }
 ```
 
-Now, we can test the data with some different variables.
+Now, we can test our function by requesting data for a single year with numeric variables, categorical variables, and geography.
 
 ```{r}
 sample_data <- pums_query(
@@ -194,7 +195,7 @@ sample_data <- pums_query(
 head(sample_data)
 ```
 
-The last function was able to return a tibble for a single year of data, but now we are going to make a multi-year function. Pums_multi_year() loops over each requested year, calls pums_query() for each, and combines the results into a single tibble with a year column. This allows for comparison across years.
+The last function was able to return a tibble for a single year of data, so now we need to expand on this to call data from multiple years. Pums_multi_year() loops over each requested year, calls pums_query() for each, and combines the results into a single tibble with a year column. This allows for comparison across years.
 
 ```{r}
 # Create a function that calls the single year function as many times as needed and combines into one final tibble
@@ -229,39 +230,34 @@ sample_multi_year <- pums_multi_year(
 head(sample_multi_year)
 ```
 
+At this point, we have developed a set of functions that can query the API, return tibbles, and combine data across years. In the next section we will build generic summarizing and plotting functions to explore the data in more detail.
 
 #Writing a Generic Function for Summarizing
 
-Here we write a general function for summarizing. This function takes in three arguments: the tibble with class census, the numeric variable(s) to summarize, and the categorical variable(s) to summarize. By default, this function summarizes all numeric variables (other than PWGTP) and all categorical variables
-in the tibble. However, the user may also specify the variables they’d like to summarize. For numerical variables, the function will give the sample mean and standard deviation, and for categorigal variables the function returns the counts. Here we also write a general function for plotting, where the user to specify one categorical variable and one numeric variable for plotting purposes.
+Here we write a general function for summarizing. This function takes in three arguments: the tibble with class census, the numeric variable(s) to summarize, and the categorical variable(s) to summarize. By default, this function summarizes all numeric variables (other than PWGTP) and all categorical variables in the tibble. However, the user may also specify the variables they’d like to summarize. For numerical variables, the function will give the sample mean and standard deviation, and for categorical variables the function returns the counts. Here we also write a general function for plotting, where the user can specify one categorical variable and one numeric variable for plotting purposes.
 
 ```{r}
-#check structure of tibble
+# Check structure of tibble
 str(sample_data)
 
-
-#function takes in tibble, numeric variables, categorical variables
+# Function takes in tibble, numeric variables, categorical variables
 summary_census <- function(census, numeric_var=NULL, cat_var=NULL){
   
-  
-  #Naming all possible categorical variables
+# Naming all possible categorical variables
 cat_vars <- c("SEX", "FER", "HHL", "HISPEED", "SCH", "SCHL")
 
-
-  #Naming all possible categorical variables for this function 
+# Naming all possible categorical variables for this function 
 all_cat_vars<-intersect(all_cat_vars, names(census))
 
-#Naming all possible numerical variables for the funciton
-
+# Naming all possible numerical variables for the funciton
 num_vars <- c("AGEP", "PWGTP", "GASP", "GRPIP", "JWMNP")
 
-  #Naming all possible numerica variables for this function 
+# Naming all possible numerica variables for this function 
 all_num_vars<-intersect(num_vars, names(census))
   
-  
-  # assigning weight to the column PWGTP in the data
+# Assigning weight to the column PWGTP in the data
   weight <- census$PWGTP
-  #this first if will give back everything by defalut if no numeric or categorical variables are entered
+# This first if() will give back everything by default if no numeric or categorical variables are entered
   if (is.null(numeric_var) & is.null(cat_var)) {
    numeric_cols <- names(census)[sapply(census, is.numeric)]
 
@@ -281,7 +277,8 @@ summary <- census |>
       .names = "{.col}_sample_sd"
     )
   )
-  #here we count the categorical variables
+
+# Here we count the categorical variables
    cat_counts <- census |>
       as.data.frame() |>
      select(all_cat_vars, PWGTP) |>
@@ -292,14 +289,14 @@ summary <- census |>
   ) |>
       group_by(variable, value) |>
       summarise(weighted_count = sum(PWGTP), .groups = "drop")
-#here we return the numerical and categorical summaries
+   
+# Here we return the numerical and categorical summaries
 return(list(
   Numeric_Summary = summary,
   Categorical_Counts = cat_counts
 ))
    
-#this handles if the user does not submit any numeric variables, only categorical. It will provide the counts for the categorical variables they provided 
-   
+# This handles if the user does not submit any numeric variables, only categorical. It will provide the counts for the categorical variables they provided 
   } else if (is.null(numeric_var)) { 
    cat_counts <- census |>
      select(all_cat_vars, PWGTP) |>
@@ -315,11 +312,10 @@ return(list(
   Categorical_Counts = cat_counts
 )
 
-#this handles if the user does not submit any categorical variables, only numerical It will provide the summaries for the numerical variables they provided 
+# This handles if the user does not submit any categorical variables, only numerical It will provide the summaries for the numerical variables they provided 
   } else if(is.null(cat_var)) {
   
-  #need to find the sample mean and standard deviation for the numerical variables they provided
-    
+# Now we need to find the sample mean and standard deviation for the numerical variables they provided
     summary <- census |>
   reframe(
     # Sample mean
@@ -339,9 +335,8 @@ return(list(
   Numeric_Summary = summary
 ))
 
-    #this handles if the user enters categorical and numeric variables
+# This handles if the user enters categorical and numeric variables
   }else{
-  
       cat_counts <- census |>
      select(all_cat_vars, PWGTP) |>
       pivot_longer(
@@ -353,8 +348,7 @@ return(list(
       summarise(weighted_count = sum(PWGTP), .groups = "drop")
    
       
-      #need to find the sample mean and standard deviation for the numerical variables they provided
-    
+# Now we need to find the sample mean and standard deviation for the numerical variables they provided
     summary <- census |>
       as.data.frame()|>
   reframe(
@@ -371,51 +365,40 @@ return(list(
       .names = "{.col}_sample_sd"
     )
   )
-      
-
 return(list(
   Numeric_Summary = summary,
   Categorical_Counts = cat_counts
 ))
-
-    
   }
-    
-    
 } 
-#Test of just entering tibble
+# Test of just entering tibble
 summary_census(sample_data)
 
-#Test of entering tibble with numeric variable
+# Test of entering tibble with numeric variable
 summary_census(sample_data, numeric_var = "AGEP")
 
-#Test of entering tibble with categorical variable
+# Test of entering tibble with categorical variable
 summary_census(sample_data, cat_var = "SEX")
 
-#Test of entering tibble with categorical variable
-
+# Test of entering tibble with categorical variable
 summary_census(sample_data, numeric_var = "AGEP", cat_var = "SEX")
 
-#Test of entering tibble with more than one numerical variable
-
+# Test of entering tibble with more than one numerical variable
 summary_census(sample_data, numeric_var = c("AGEP", "GASP"))
 
-#Test of entering tibble with more than one categorical variable
-
+# Test of entering tibble with more than one categorical variable
 summary_census(sample_data, cat_var = c("SEX", "SCHL"))
 
-#Test of entering tibble with more than one categorical variable and more than one numeric variable
-
+# Test of entering tibble with more than one categorical variable and more than one numeric variable
 summary_census(sample_data, numeric_var = c("GRPIP", "JWMNP"), cat_var = c("HHL", "HISPEED"))
-
-
 ```
+
 #Plotting
 
-Here we write a general function for plotting, where the user to specify one categorical variable and one numeric variable for plotting purposes.
+Here we write a general function for plotting, where the user can specify one categorical variable and one numeric variable for plotting purposes.
 
 ```{r}
-#Run these in your console
+# Run these in your console
 plot.function #what is used for a class = function
 getS3method("plot","data.frame") #what is used for a class = data frame
 plot
@@ -426,14 +409,14 @@ aes(x = get(cat_var), y = get(num_var), weight = PWGTP)) +
 geom_boxplot()
 }
 
-#test of plot function
+# Test of plot function
 census_plot(sample_data, cat_var = "SEX", num_var = "AGEP")
 
 ```
 
 # Data Investigation
 
-For this investigation, we will investigate if there appears to be a relationship between household internet access and age in North Carolina in 2022. Are young people more likely to have household internet access?
+Now, we will investigate if there appears to be a relationship between household internet access and age in North Carolina in 2022. Are young people more likely to have household internet access?
 
 ```{r}
 # Query the API
