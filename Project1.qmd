@@ -50,7 +50,7 @@ jwap_lookup <- jwap_blob$values$item
 names(jwap_lookup) <- as.numeric(names(jwap_lookup))
 
 jwdp_url <- "https://api.census.gov/data/2022/acs/acs1/pums/variables/JWDP.json"
-jwdp_blob <- fromJSON(url)
+jwdp_blob <- fromJSON(jwdp_url)
 jwdp_lookup <- jwdp_blob$values$item
 names(jwdp_lookup) <- as.numeric(names(jwdp_lookup))
 ```
