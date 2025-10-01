@@ -206,7 +206,12 @@ pums_multi_year <- function(years, numeric_variables = c("AGEP", "PWGTP"), categ
     test_tibble <- pums_query(
       year = yr, numeric_variables = numeric_variables, categorical_variables = categorical_variables, geography = geography, geography_code = geography_code
     )
+# Add year column
     test_tibble$year <- yr
+    
+# # Add census class to census_tibble
+  class(census_tibble) <- c("census", class(census_tibble))
+  
     all_data[[as.character(yr)]] <- test_tibble
   }
 # Combines data from given years into one final tibble
@@ -231,12 +236,8 @@ Here we write a general function for summarizing. This function takes in three a
 in the tibble. However, the user may also specify the variables they’d like to summarize. For numerical variables, the function will give the sample mean and standard deviation, and for categorigal variables the function returns the counts. Here we also write a general function for plotting, where the user to specify one categorical variable and one numeric variable for plotting purposes.
 
 ```{r}
-library(dplyr)
 #check structure of tibble
 str(sample_data)
-
-#Add our own class to our census data for summarizing purposes.
-class(sample_data) <- c("census", class(sample_data))
 
 #Naming all possible categorical variables for the function
 all_cat_vars <- c("SEX", "FER", "HHL", "HISPEED", "SCH", "SCHL")
@@ -408,7 +409,7 @@ getS3method("plot","data.frame") #what is used for a class = data frame
 plot
 
 census_plot <-function(census_data, cat_var, num_var){
-ggplot(sample_data,
+ggplot(census_data,
 aes(x = get(cat_var), y = get(num_var), weight = PWGTP)) +
 geom_boxplot()
 }
@@ -420,16 +421,16 @@ census_plot(sample_data, cat_var = "SEX", num_var = "AGEP")
 
 # Data Investigation
 
-For this investigation, we will investigate if there appears to be a relationship between household internet access and age. Are young people more likely to have household internet access?
+For this investigation, we will investigate if there appears to be a relationship between household internet access and age in North Carolina in 2022. Are young people more likely to have household internet access?
 
 ```{r}
+# Query API
+pums_query(year = 2022, numeric_variables = c("AGEP", "PWGTP"), categorical_variables = "HISPEED", geography = "state", geography_code = "37")
 
-
-
-#Summarize
+# Summarize
 summary_census(sample_data, numeric_var = "AGEP", cat_var ="HISPEED")
 
-#Plot of the variables
+# Plot of the variables
 
 census_plot(sample_data, num_var = "AGEP", cat_var = "HISPEED" )
 
