@@ -5,7 +5,8 @@ editor: visual
 ---
 # Introduction
 
-
+For this project, we are working with the Census Public Use Microdata Sample API. This PUMS data
+Our goal is to write a function to query this API to return a nicely formatted tibble, and then write a summary function to summarize and visualize the data. After creating and testing our functions, we used them to investigate how JWAP and JWDP evolve over time by plotting the averages for each year.
 
 # Data Processing
 
@@ -325,3 +326,6 @@ summary.census(sample_data, numeric_var = "AGEP", cat_var = "SEX")
 #summarize_census(census, c(income, age), c(gender, education))
 
 ```
+
+
+# Data Investigation
