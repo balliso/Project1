@@ -8,7 +8,7 @@ editor: visual
 ---
 # Introduction
 
-For this project, we are working with the Census Public Use Microdata Sample (PUMS) API. The PUMS data consists of a sample of individual records from people and housing units across America. Our goal is to write a function to query this API to return a nicely formatted tibble, and then write a summary function to summarize and visualize the data. After creating and testing our functions, we will use them to investigate the relationship between household internet access and age in North Carolina in 2022.
+For this project, we are working with the Census Public Use Microdata Sample (PUMS) API. The PUMS data consists of a sample of individual records from people and housing units across America. Our goal is to write a function to query this API to return a nicely formatted tibble, and then write a summary function to summarize and visualize the data. After creating and testing our functions, we will use them to investigate the relationship between household internet access and age in North Carolina in 2022. This project demonstrates how functions can streamline API querying and census data analysis.
 
 # Data Processing
 
@@ -416,7 +416,9 @@ census_plot(sample_data, cat_var = "SEX", num_var = "AGEP")
 
 # Data Investigation
 
-Now, we will investigate if there appears to be a relationship between household internet access and age in North Carolina in 2022. Are young people more likely to have household internet access?
+Now, we will investigate whether there is a relationship between household internet access and age in North Carolina in 2022. Specifically, we are asking the following: are younger people more likely to live in households with high-speed internet access?
+
+To do this, we will query the Census PUMS API for 2022 North Carolina data, selecting age (AGE) as the numeric variable and household high-speed internet access (HISPEED) as the categorical variable. We then summarize the data and generate a boxplot to visualize the relationship between the variables.
 
 ```{r}
 # Query the API
@@ -429,4 +431,5 @@ summary_census(nc_data, numeric_var = "AGEP", cat_var ="HISPEED")
 census_plot(nc_data, cat_var = "HISPEED", num_var = "AGEP")
 
 ```
-Looking at the graph, it does appear that the median age of those that have high speed internet is lower than the median age of those who answered no or N/A. 
+
+The graph shows that the median age of individuals living in households with high-speed internet access appears lower than the median age of those in households without high speed access or N/A with no paid access to the internet. This suggests that younger people may be more likely to reside in households with internet access, though further statistical analysis would be needed to confirm this relationship. 
