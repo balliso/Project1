@@ -215,7 +215,7 @@ pums_multi_year <- function(years, numeric_variables = c("AGEP", "PWGTP"), categ
     all_data[[as.character(yr)]] <- test_tibble
   }
 # Combines data from given years into one final tibble
-  combined_data <- dplyr::bind_rows(all_data)
+  combined_data <-dplyr::bind_rows(all_data)
   return(combined_data)
 }
 ```
@@ -424,17 +424,14 @@ census_plot(sample_data, cat_var = "SEX", num_var = "AGEP")
 For this investigation, we will investigate if there appears to be a relationship between household internet access and age in North Carolina in 2022. Are young people more likely to have household internet access?
 
 ```{r}
-# Query API
-pums_query(year = 2022, numeric_variables = c("AGEP", "PWGTP"), categorical_variables = "HISPEED", geography = "state", geography_code = "37")
+# Query the API
+nc_data <- pums_query(year = 2022, numeric_variables = c("AGEP", "PWGTP"), categorical_variables = "HISPEED", geography = "state", geography_code = "37")
 
 # Summarize
-summary_census(sample_data, numeric_var = "AGEP", cat_var ="HISPEED")
+summary_census(nc_data, numeric_var = "AGEP", cat_var ="HISPEED")
 
 # Plot of the variables
-
-census_plot(sample_data, num_var = "AGEP", cat_var = "HISPEED" )
-
-
+census_plot(nc_data, cat_var = "HISPEED", num_var = "AGEP")
 
 ```
 Looking at the graph, it does appear that the median age of those that have high speed internet is lower than the median age of those who answered no or N/A. 
