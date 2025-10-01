@@ -209,10 +209,7 @@ pums_multi_year <- function(years, numeric_variables = c("AGEP", "PWGTP"), categ
     )
 # Add year column
     test_tibble$year <- yr
-    
-# # Add census class to census_tibble
-  class(census_tibble) <- c("census", class(census_tibble))
-  
+
     all_data[[as.character(yr)]] <- test_tibble
   }
 # Combines data from given years into one final tibble
