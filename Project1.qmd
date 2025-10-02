@@ -390,7 +390,7 @@ summary_census(sample_data, cat_var = c("SEX", "SCHL"))
 summary_census(sample_data, numeric_var = c("GRPIP", "JWMNP"), cat_var = c("HHL", "HISPEED"))
 ```
 
-#Plotting
+# Plotting
 
 Here we write a general function for plotting, where the user can specify one categorical variable and one numeric variable for plotting purposes.
 
