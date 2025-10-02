@@ -8,11 +8,11 @@ editor: visual
 ---
 # Introduction
 
-For this project, we are working with the Census Public Use Microdata Sample (PUMS) API. The PUMS data consists of a sample of individual records from people and housing units across America. Our goal is to write a function to query this API to return a nicely formatted tibble, and then write a summary function to summarize and visualize the data. After creating and testing our functions, we will use them to investigate the relationship between household internet access and age in North Carolina in 2022. This project demonstrates how functions can streamline API querying and census data analysis.
+For this project, we are working with the Census Public Use Microdata Sample (PUMS) API. The PUMS data consists of a sample of individual records from people and housing units across America. Our goal is to write a function to query this API to return a nicely formatted tibble, and then write a summary function to summarize and visualize the data. After creating and testing our functions, we will use them to investigate the relationship between household internet speed and age in North Carolina in 2022. This project demonstrates how functions can streamline API querying and data analysis.
 
 # Data Processing
 
-In this section, we process data from the Census PUMS API. The goal is to build a set of functions that return clean tibbles that are easy to work with in R. We will explore the raw API response and create helper functions to clean and structure the data. Then, we modify the functions so a user can customize which variables and years are returned.
+In this section, we process data from the Census PUMS API. The goal is to build a set of functions that return clean tibbles that are easy to work with in R. We explore the raw API response and create helper functions to clean and structure the data. Then, we modify the functions so a user can customize which variables and years are returned.
 
 ```{r}
 library(httr)
@@ -229,7 +229,7 @@ head(sample_multi_year)
 
 At this point, we have developed a set of functions that can query the API, return tibbles, and combine data across years. In the next section we will build generic summarizing and plotting functions to explore the data in more detail.
 
-#Writing a Generic Function for Summarizing
+# Writing a Generic Function for Summarizing
 
 Here we write a general function for summarizing. This function takes in three arguments: the tibble with class census, the numeric variable(s) to summarize, and the categorical variable(s) to summarize. By default, this function summarizes all numeric variables (other than PWGTP) and all categorical variables in the tibble. However, the user may also specify the variables they’d like to summarize. For numerical variables, the function will give the sample mean and standard deviation, and for categorical variables the function returns the counts. Here we also write a general function for plotting, where the user can specify one categorical variable and one numeric variable for plotting purposes.
 
@@ -244,7 +244,7 @@ summary_census <- function(census, numeric_var=NULL, cat_var=NULL){
 cat_vars <- c("SEX", "FER", "HHL", "HISPEED", "SCH", "SCHL")
 
 # Naming all possible categorical variables for this function 
-all_cat_vars<-intersect(all_cat_vars, names(census))
+all_cat_vars<-intersect(cat_vars, names(census))
 
 # Naming all possible numerical variables for the funciton
 num_vars <- c("AGEP", "PWGTP", "GASP", "GRPIP", "JWMNP")
@@ -402,7 +402,7 @@ plot
 
 census_plot <-function(census_data, cat_var, num_var){
 ggplot(census_data,
-aes(x = get(cat_var), y = get(num_var), weight = PWGTP)) +
+aes(x = cat_var, y = num_var, weight = PWGTP)) +
 geom_boxplot()
 }
 
