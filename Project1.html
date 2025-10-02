@@ -112,11 +112,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>For this project, we are working with the Census Public Use Microdata Sample (PUMS) API. The PUMS data consists of a sample of individual records from people and housing units across America. Our goal is to write a function to query this API to return a nicely formatted tibble, and then write a summary function to summarize and visualize the data. After creating and testing our functions, we will use them to investigate the relationship between household internet access and age in North Carolina in 2022. This project demonstrates how functions can streamline API querying and census data analysis.</p>
+<p>For this project, we are working with the Census Public Use Microdata Sample (PUMS) API. The PUMS data consists of a sample of individual records from people and housing units across America. Our goal is to write a function to query this API to return a nicely formatted tibble, and then write a summary function to summarize and visualize the data. After creating and testing our functions, we will use them to investigate the relationship between household internet speed and age in North Carolina in 2022. This project demonstrates how functions can streamline API querying and data analysis.</p>
 </section>
 <section id="data-processing" class="level1">
 <h1>Data Processing</h1>
-<p>In this section, we process data from the Census PUMS API. The goal is to build a set of functions that return clean tibbles that are easy to work with in R. We will explore the raw API response and create helper functions to clean and structure the data. Then, we modify the functions so a user can customize which variables and years are returned.</p>
+<p>In this section, we process data from the Census PUMS API. The goal is to build a set of functions that return clean tibbles that are easy to work with in R. We explore the raw API response and create helper functions to clean and structure the data. Then, we modify the functions so a user can customize which variables and years are returned.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(httr)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(jsonlite)</span>
@@ -139,9 +139,9 @@ Attaching package: 'dplyr'</code></pre>
 <div class="cell-output cell-output-stderr">
 <pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
 ✔ forcats   1.0.0     ✔ readr     2.1.5
-✔ ggplot2   3.5.2     ✔ stringr   1.5.1
+✔ ggplot2   4.0.0     ✔ stringr   1.5.2
 ✔ lubridate 1.9.4     ✔ tibble    3.2.1
-✔ purrr     1.0.4     ✔ tidyr     1.3.1</code></pre>
+✔ purrr     1.1.0     ✔ tidyr     1.3.1</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code>── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
@@ -173,9 +173,9 @@ Attaching package: 'dplyr'</code></pre>
   ..$ content-security-policy     : chr "default-src 'self'; img-src 'self' data:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self"| __truncated__
   ..$ x-content-type-options      : chr "nosniff"
   ..$ content-type                : chr "application/json;charset=utf-8"
-  ..$ date                        : chr "Thu, 02 Oct 2025 02:14:39 GMT"
+  ..$ date                        : chr "Thu, 02 Oct 2025 02:34:25 GMT"
   ..$ strict-transport-security   : chr "max-age=31536000"
-  ..$ set-cookie                  : chr "TS010383f0=01283c52a4ad2dedaa6cd27ac65a7722e39a41a1eb5a4b378d7f63938a8b1e284f7b4761fa7d6e4853802970436ce6373010"| __truncated__
+  ..$ set-cookie                  : chr "TS010383f0=01283c52a47635d658fc5f6c83a586eba5ffde737bde246ceb8885e3e98a135ab6f731f598001da27f7e5c9b71c098375db2"| __truncated__
   ..$ transfer-encoding           : chr "chunked"
   ..- attr(*, "class")= chr [1:2] "insensitive" "list"
  $ all_headers:List of 1
@@ -191,9 +191,9 @@ Attaching package: 'dplyr'</code></pre>
   .. .. ..$ content-security-policy     : chr "default-src 'self'; img-src 'self' data:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self"| __truncated__
   .. .. ..$ x-content-type-options      : chr "nosniff"
   .. .. ..$ content-type                : chr "application/json;charset=utf-8"
-  .. .. ..$ date                        : chr "Thu, 02 Oct 2025 02:14:39 GMT"
+  .. .. ..$ date                        : chr "Thu, 02 Oct 2025 02:34:25 GMT"
   .. .. ..$ strict-transport-security   : chr "max-age=31536000"
-  .. .. ..$ set-cookie                  : chr "TS010383f0=01283c52a4ad2dedaa6cd27ac65a7722e39a41a1eb5a4b378d7f63938a8b1e284f7b4761fa7d6e4853802970436ce6373010"| __truncated__
+  .. .. ..$ set-cookie                  : chr "TS010383f0=01283c52a47635d658fc5f6c83a586eba5ffde737bde246ceb8885e3e98a135ab6f731f598001da27f7e5c9b71c098375db2"| __truncated__
   .. .. ..$ transfer-encoding           : chr "chunked"
   .. .. ..- attr(*, "class")= chr [1:2] "insensitive" "list"
  $ cookies    :'data.frame':    1 obs. of  7 variables:
@@ -203,10 +203,10 @@ Attaching package: 'dplyr'</code></pre>
   ..$ secure    : logi TRUE
   ..$ expiration: POSIXct[1:1], format: "Inf"
   ..$ name      : chr "TS010383f0"
-  ..$ value     : chr "01283c52a4ad2dedaa6cd27ac65a7722e39a41a1eb5a4b378d7f63938a8b1e284f7b4761fa7d6e4853802970436ce6373010c910b8"
+  ..$ value     : chr "01283c52a47635d658fc5f6c83a586eba5ffde737bde246ceb8885e3e98a135ab6f731f598001da27f7e5c9b71c098375db2358e6b"
  $ content    : raw [1:937508] 5b 5b 22 53 ...
- $ date       : POSIXct[1:1], format: "2025-10-02 02:14:39"
- $ times      : Named num [1:6] 0 0.0564 0.0779 0.1615 0.3895 ...
+ $ date       : POSIXct[1:1], format: "2025-10-02 02:34:25"
+ $ times      : Named num [1:6] 0 0.311 0.331 0.383 0.622 ...
   ..- attr(*, "names")= chr [1:6] "redirect" "namelookup" "connect" "pretransfer" ...
  $ request    :List of 7
   ..$ method    : chr "GET"
@@ -215,7 +215,7 @@ Attaching package: 'dplyr'</code></pre>
   .. ..- attr(*, "names")= chr "Accept"
   ..$ fields    : NULL
   ..$ options   :List of 2
-  .. ..$ useragent: chr "libcurl/8.14.1 r-curl/6.4.0 httr/1.4.7"
+  .. ..$ useragent: chr "libcurl/8.14.1 r-curl/7.0.0 httr/1.4.7"
   .. ..$ httpget  : logi TRUE
   ..$ auth_token: NULL
   ..$ output    : list()
@@ -430,7 +430,9 @@ Attaching package: 'dplyr'</code></pre>
 </div>
 </div>
 <p>At this point, we have developed a set of functions that can query the API, return tibbles, and combine data across years. In the next section we will build generic summarizing and plotting functions to explore the data in more detail.</p>
-<p>#Writing a Generic Function for Summarizing</p>
+</section>
+<section id="writing-a-generic-function-for-summarizing" class="level1">
+<h1>Writing a Generic Function for Summarizing</h1>
 <p>Here we write a general function for summarizing. This function takes in three arguments: the tibble with class census, the numeric variable(s) to summarize, and the categorical variable(s) to summarize. By default, this function summarizes all numeric variables (other than PWGTP) and all categorical variables in the tibble. However, the user may also specify the variables they’d like to summarize. For numerical variables, the function will give the sample mean and standard deviation, and for categorical variables the function returns the counts. Here we also write a general function for plotting, where the user can specify one categorical variable and one numeric variable for plotting purposes.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check structure of tibble</span></span>
@@ -709,7 +711,9 @@ $Categorical_Counts
 9 HISPEED  No                                                    1372232</code></pre>
 </div>
 </div>
-<p>#Plotting</p>
+</section>
+<section id="plotting" class="level1">
+<h1>Plotting</h1>
 <p>Here we write a general function for plotting, where the user can specify one categorical variable and one numeric variable for plotting purposes.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run these in your console</span></span>
@@ -744,7 +748,7 @@ $Categorical_Counts
     curve(expr = x, from = from, to = to, xlim = xlim, ylab = ylab, 
         ...)
 }
-&lt;bytecode: 0x12ae91cb0&gt;
+&lt;bytecode: 0x135eae820&gt;
 &lt;environment: namespace:graphics&gt;</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getS3method</span>(<span class="st">"plot"</span>,<span class="st">"data.frame"</span>) <span class="co">#what is used for a class = data frame</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -769,14 +773,14 @@ $Categorical_Counts
         pairs(data.matrix(x), ...)
     }
 }
-&lt;bytecode: 0x11bdc7310&gt;
+&lt;bytecode: 0x135b62c88&gt;
 &lt;environment: namespace:graphics&gt;</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>plot</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>function (x, y, ...) 
 UseMethod("plot")
-&lt;bytecode: 0x10bd7d120&gt;
+&lt;bytecode: 0x1169f6418&gt;
 &lt;environment: namespace:base&gt;</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>census_plot <span class="ot">&lt;-</span><span class="cf">function</span>(census_data, cat_var, num_var){</span>
@@ -787,11 +791,6 @@ UseMethod("plot")
 <span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Test of plot function</span></span>
 <span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a><span class="fu">census_plot</span>(sample_data, <span class="at">cat_var =</span> <span class="st">"SEX"</span>, <span class="at">num_var =</span> <span class="st">"AGEP"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning: Computation failed in `stat_boxplot()`.
-Caused by error in `loadNamespace()`:
-! there is no package called 'quantreg'</code></pre>
-</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -806,11 +805,11 @@ Caused by error in `loadNamespace()`:
 <p>Now, we will investigate whether there is a relationship between household internet access and age in North Carolina in 2022. Specifically, we are asking the following: are younger people more likely to live in households with high-speed internet access?</p>
 <p>To do this, we will query the Census PUMS API for 2022 North Carolina data, selecting age (AGE) as the numeric variable and household high-speed internet access (HISPEED) as the categorical variable. We then summarize the data and generate a boxplot to visualize the relationship between the variables.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Query the API</span></span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>nc_data <span class="ot">&lt;-</span> <span class="fu">pums_query</span>(<span class="at">year =</span> <span class="dv">2022</span>, <span class="at">numeric_variables =</span> <span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"PWGTP"</span>), <span class="at">categorical_variables =</span> <span class="st">"HISPEED"</span>, <span class="at">geography =</span> <span class="st">"state"</span>, <span class="at">geography_code =</span> <span class="st">"37"</span>)</span>
-<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Summarize</span></span>
-<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary_census</span>(nc_data, <span class="at">numeric_var =</span> <span class="st">"AGEP"</span>, <span class="at">cat_var =</span><span class="st">"HISPEED"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Query the API</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>nc_data <span class="ot">&lt;-</span> <span class="fu">pums_query</span>(<span class="at">year =</span> <span class="dv">2022</span>, <span class="at">numeric_variables =</span> <span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"PWGTP"</span>), <span class="at">categorical_variables =</span> <span class="st">"HISPEED"</span>, <span class="at">geography =</span> <span class="st">"state"</span>, <span class="at">geography_code =</span> <span class="st">"37"</span>)</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Summarize</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary_census</span>(nc_data, <span class="at">numeric_var =</span> <span class="st">"AGEP"</span>, <span class="at">cat_var =</span><span class="st">"HISPEED"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>$Numeric_Summary
   AGEP_sample_mean AGEP_sample_sd
@@ -824,13 +823,8 @@ $Categorical_Counts
 2 HISPEED  Yes                                                   8316849
 3 HISPEED  No                                                    1372232</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot of the variables</span></span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">census_plot</span>(nc_data, <span class="at">cat_var =</span> <span class="st">"HISPEED"</span>, <span class="at">num_var =</span> <span class="st">"AGEP"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning: Computation failed in `stat_boxplot()`.
-Caused by error in `loadNamespace()`:
-! there is no package called 'quantreg'</code></pre>
-</div>
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot of the variables</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">census_plot</span>(nc_data, <span class="at">cat_var =</span> <span class="st">"HISPEED"</span>, <span class="at">num_var =</span> <span class="st">"AGEP"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
