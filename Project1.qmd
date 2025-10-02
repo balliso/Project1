@@ -278,7 +278,7 @@ summary <- census |>
 # Here we count the categorical variables
    cat_counts <- census |>
       as.data.frame() |>
-     select(all_cat_vars, PWGTP) |>
+     select(all_of(all_cat_vars), PWGTP) |>
   pivot_longer(
     cols = all_cat_vars,
     names_to = "variable",
@@ -296,7 +296,7 @@ return(list(
 # This handles if the user does not submit any numeric variables, only categorical. It will provide the counts for the categorical variables they provided 
   } else if (is.null(numeric_var)) { 
    cat_counts <- census |>
-     select(all_cat_vars, PWGTP) |>
+     select(all_of(all_cat_vars), PWGTP) |>
       pivot_longer(
        cols = all_of(cat_var),
         names_to = "variable",
@@ -335,7 +335,7 @@ return(list(
 # This handles if the user enters categorical and numeric variables
   }else{
       cat_counts <- census |>
-     select(all_cat_vars, PWGTP) |>
+     select(all_of(all_cat_vars), PWGTP) |>
       pivot_longer(
        cols = all_of(cat_var),
         names_to = "variable",
@@ -402,12 +402,12 @@ plot
 
 census_plot <-function(census_data, cat_var, num_var){
 ggplot(census_data,
-aes(x = cat_var, y = num_var, weight = PWGTP)) +
+ aes(x = !!sym(cat_var), y = !!sym(num_var), weight = PWGTP)) +
 geom_boxplot()
 }
 
 # Test of plot function
-census_plot(sample_data, cat_var = "SEX", num_var = "AGEP")
+census_plot(sample_data, cat_var="SEX",num_var="AGEP")
 
 ```
 
