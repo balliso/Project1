@@ -1,0 +1,483 @@
+---
+title: "Project1"
+author: "Bailey Allison & Laurie Short"
+date: "2025-10-01"
+output: html_document
+purpose: "Project using Census data to query, summarize, and visualize trends."
+editor: visual
+---
+
+
+# Introduction
+
+For this project, we are working with the Census Public Use Microdata Sample (PUMS) API. The PUMS data consists of a sample of individual records from people and housing units across America. Our goal is to write a function to query this API to return a nicely formatted tibble, and then write a summary function to summarize and visualize the data. After creating and testing our functions, we will use them to investigate the relationship between household internet speed and age in North Carolina in 2022. This project demonstrates how functions can streamline API querying and data analysis.
+
+# Data Processing
+
+In this section, we process data from the Census PUMS API. The goal is to build a set of functions that return clean tibbles that are easy to work with in R. We explore the raw API response and create helper functions to clean and structure the data. Then, we modify the functions so a user can customize which variables and years are returned.
+
+
+
+```{r}
+library(httr)
+library(jsonlite)
+library(dplyr)
+library(tidyverse)
+library(lubridate)
+library(ggplot2) 
+```
+
+
+
+The following code chunk reads in the data and checks the structure so we can figure out how to turn it into a tibble.
+
+
+
+```{r}
+pums_URL <- "https://api.census.gov/data/2022/acs/acs1/pums?get=SEX,PWGTP,MAR&SCHL=24"
+pums_data <- httr::GET(pums_URL)
+
+#Check structure
+str(pums_data)
+```
+
+
+
+The raw output from httr::GET() is not immediately usable because it comes as JSON text with column names embedded in the first row. To fix this, we wrote a helper function called clean_census(). This function extracts the column names, removes the header row, and returns the result as a tibble. Because it is written generally, it can be reused for any Census API response.
+
+
+
+```{r}
+clean_query_result <- function(res) {
+  pums_parsed <- fromJSON(rawToChar(res$content))
+  colnames(pums_parsed) <- pums_parsed[1,]
+  pums_info <- as_tibble(pums_parsed[-1,])
+  return(pums_info)
+}
+```
+
+
+
+This code chunk creates some look up tables that will be useful for turning numeric variables into time values later in the pums_query() function. 
+
+
+
+```{r}
+# Query the API for a table describing the JWAP and JWDP categorical variables and then create lookup tables to turn numeric variables into time variables later
+
+jwap_url <- "https://api.census.gov/data/2022/acs/acs1/pums/variables/JWAP.json"
+jwap_blob <- fromJSON(jwap_url)
+jwap_lookup <- jwap_blob$values$item
+names(jwap_lookup) <- as.numeric(names(jwap_lookup))
+
+jwdp_url <- "https://api.census.gov/data/2022/acs/acs1/pums/variables/JWDP.json"
+jwdp_blob <- fromJSON(jwdp_url)
+jwdp_lookup <- jwdp_blob$values$item
+names(jwdp_lookup) <- as.numeric(names(jwdp_lookup))
+```
+
+
+
+This code chunk creates some lists that will be useful for turning categorical variables into factors with appropriate levels later in the pums_query() function. 
+
+
+
+```{r}
+# Save categorical variables as lists to turn into a factor with appropriate levels later
+
+FER_labels <- c("0" = "N/A (less than 15 years/greater than 50 years/ male)", "1" = "Yes", "2" = "No")
+
+HHL_labels <- c("0" = "N/A (GQ/vacant)", "1" = "English Only", "2" = "Spanish", "3" = "Other Indo-European languages", "4" = "Asian and Pacific Island languages", "5" = "Other Language")
+
+HISPEED_labels <- c("0" = "N/A (GQ/vacant/no paid access to the internet)", "1" = "Yes", "2" = "No")
+
+JWTRNS_labels <- c("0" = "N/A (not a worker-not in the labor force, including persons under 16 years; unemployed; employed, with a job but not at work; Armed Forces, with a job but not at work)", "1" = "Car, truck, or van", "2" = "Bus", "3" = "Subway or elevated rail", "4" = "Long-distance train or commuter rail", "5" = "Light rail, streetcar, or trolley", "6" = "Ferryboat", "7" = "Taxicab", "8" = "Motorcycle", "9" = "Bicycle", "10" = "Walked", "11" = "Worked from home", "12" = "Other method")
+
+SCH_labels <- c("0" = "N/A (less than 3 years old)", "1" = "No, has not attended in the last 3 months", "2" = "Yes, public school or public college", "3" = "Yes, private school or college or home school")
+
+SCHL_labels <- c("0" = "N/A (less than 3 years old)", "1" = "No schooling completed", "2" = "Nursery school, preschool", "3" = "Kindergarten", "4" = "Grade 1", "5" = "Grade 2", "6" = "Grade 3", "7" = "Grade 4", "8" = "Grade 5", "9" = "Grade 6", "10" = "Grade 7", "11" = "Grade 8", "12" = "Grade 9", "13" = "Grade 10", "14" = "Grade 11", "15" = "12th grade - no diploma", "16" = "Regular high school diploma", "17" = "GED or alternative credential", "18" = "Some college, but less than 1 year", "19" = "1 or more years of college credit, no degree", "20" = "Associate's degree", "21" = "Bachelor's degree", "22" = "Master's degree", "23" = "Professional degree beyond a bachelor's degree", "24" = "Doctorate degree")
+
+SEX_labels <- c("1" = "Male", "2" = "Female")
+```
+
+
+
+Next, we need a function that can query the API while allowing the user to specify which data they would like to display. To do this, we wrote a function, pums_query() that allows users to specify the survey year, numeric variables, categorical variables, geography level, and optional data subsetting. Pums_query() performs type conversions which are necessary for some numeric and categorical variables. We also used checks to ensure that the inputs are valid, which helps to avoid API errors.
+
+
+
+```{r}
+# Query the API; we used state code 37 because 03 was invalid
+pums_query <- function(year = 2022, numeric_variables = c("AGEP", "PWGTP"), categorical_variables = c("SEX"), geography = "state", geography_code = "37"){
+  
+# Argument error checking
+  if(!(year %in% 2010:2022)){
+    stop("Year is not valid")
+  }
+  if(!("PWGTP" %in% numeric_variables)){
+    stop("PWGTP must be in numeric_variables")
+  }
+  if(length(numeric_variables) < 2){
+    stop("Another numeric variable must be requested")
+  }
+  if(length(categorical_variables) < 1){
+    stop("A categorical variable must be requested")
+  }
+  if(!(tolower(geography) %in% c("all", "region", "division", "state"))){
+    stop("Must specify geography level")
+  }
+  if(geography == "state" && (!(geography_code %in% sprintf("%02d", 1:72)) && geography_code != "*")){
+    stop("Geography_code for state must be 2 digit code between 01 and 72 or = * for all states")
+  }
+  if(geography == "region" && (!(geography_code %in% sprintf("%01d", 1:4)) && geography_code != "*")){
+    stop("Geography_code for region must be code between 1 and 4 or = * for all regions")
+  }
+  if(geography == "division" && (!(geography_code %in% sprintf("%01d", 1:9)) && geography_code != "*")){
+    stop("Geography_code for division must be code between 1 and 9 or = * for all divisions")
+  }
+  
+# Combine variables into a comma separated string
+  variables <- paste(c(numeric_variables, categorical_variables), collapse = ",")
+  
+# Create the geography part of the query, allowing for subsetting. This code allows for user to call "all" geography by not including geography key from the URL if "all" is called.
+  geography_key <- ""
+  if (geography != "all"){
+    geography_key <- paste0("&for=", geography,":", geography_code)
+  }
+  
+# Build the URL from the provided arguments
+  build_url <- paste0("https://api.census.gov/data/", year, "/acs/acs1/pums?get=", variables, geography_key)
+  
+# Send http GET request
+  url_result <- httr::GET(build_url)
+  if(status_code(url_result) != 200){
+    stop("Request failed with status: ", status_code(url_result))
+  }
+  
+# Use helper function to turn url_result into a tibble
+  census_tibble <- clean_query_result(url_result)
+  
+# Turn numeric variables into numeric values
+  numeric_options <- c("AGEP", "GASP", "GRPIP", "PWGTP", "JWMNP")
+  numeric_values <- intersect(numeric_options, numeric_variables)
+  census_tibble[numeric_values] <- lapply(census_tibble[numeric_values], as.numeric)
+  
+# Helper function which converts a given time range string into a time string which is the midpoint of the range
+  time_convert <- function(time_range){
+    if (startsWith(time_range, "N")) return(NA)
+    times <- strsplit(time_range, " to ")[[1]]
+    start_time <- period_to_seconds(hm(times[1]))
+    end_time <- period_to_seconds(hm(times[2]))
+    if (end_time < start_time) end_time <- end_time + 24*3600
+    seconds <- (start_time + end_time) / 2
+    time <- as.POSIXct(seconds, origin = "1970-01-01", tz = "UTC")
+    return(format(time, "%H:%M:%S %p"))
+  }
+# Convert all values in JWAP and JWDP into time
+  if ("JWAP" %in% names(census_tibble)){
+    census_tibble[["JWAP"]] <- sapply(census_tibble[["JWAP"]], function(x) time_convert(jwap_lookup[[x]]))
+  }
+  if ("JWDP" %in% names(census_tibble)){
+    census_tibble[["JWDP"]] <- sapply(census_tibble[["JWDP"]], function(x) time_convert(jwdp_lookup[[x]]))
+  }
+# Convert categorical variable into a factor with appropriate levels 
+  if ("FER" %in% names(census_tibble)){
+    census_tibble[["FER"]] <- factor(census_tibble[["FER"]], levels = names(FER_labels), labels = FER_labels)
+  }
+  if ("HHL" %in% names(census_tibble)){
+    census_tibble[["HHL"]] <- factor(census_tibble[["HHL"]], levels = names(HHL_labels), labels = HHL_labels)
+  }
+  if ("HISPEED" %in% names(census_tibble)){
+    census_tibble[["HISPEED"]] <- factor(census_tibble[["HISPEED"]], levels = names(HISPEED_labels), labels = HISPEED_labels)
+  }
+  if ("JWTRNS" %in% names(census_tibble)){
+    census_tibble[["JWTRNS"]] <- factor(census_tibble[["JWTRNS"]], levels = names(JWTRNS_labels), labels = JWTRNS_labels)
+  }
+  if ("SCH" %in% names(census_tibble)){
+    census_tibble[["SCH"]] <- factor(census_tibble[["SCH"]], levels = names(SCH_labels), labels = SCH_labels)
+  }
+  if ("SCHL" %in% names(census_tibble)){
+    census_tibble[["SCHL"]] <- factor(census_tibble[["SCHL"]], levels = names(SCHL_labels), labels = SCHL_labels)
+  }
+  if ("SEX" %in% names(census_tibble)){
+    census_tibble[["SEX"]] <- factor(census_tibble[["SEX"]], levels = names(SEX_labels), labels = SEX_labels)
+  }
+  
+# Add census class to census_tibble
+  class(census_tibble) <- c("census", class(census_tibble))
+  
+  return(census_tibble)
+}
+```
+
+
+
+Now, we can test our function by requesting data for a single year with numeric variables, categorical variables, and geography.
+
+
+
+```{r}
+sample_data <- pums_query(
+  year = 2022, numeric_variables = c("AGEP", "PWGTP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP"), categorical_variables = c("SEX", "FER", "HHL", "HISPEED", "JWTRNS", "SCH", "SCHL"), geography = "state", geography_code = "37"
+)
+head(sample_data)
+```
+
+
+
+The last function was able to return a tibble for a single year of data, so now we need to expand on this to call data from multiple years. Pums_multi_year() loops over each requested year, calls pums_query() for each, and combines the results into a single tibble with a year column. This allows for comparison across years.
+
+
+
+```{r}
+# Create a function that calls the single year function as many times as needed and combines into one final tibble
+pums_multi_year <- function(years, numeric_variables = c("AGEP", "PWGTP"), categorical_variables = c("SEX"), geography = "state", geography_code = "37"){
+  years <- as.integer(years)
+  all_data <- list()
+# Call single year query function once for each year
+  for(yr in years){
+    test_tibble <- pums_query(
+      year = yr, numeric_variables = numeric_variables, categorical_variables = categorical_variables, geography = geography, geography_code = geography_code
+    )
+# Add year column
+    test_tibble$year <- yr
+
+    all_data[[as.character(yr)]] <- test_tibble
+  }
+# Combines data from given years into one final tibble
+  combined_data <-dplyr::bind_rows(all_data)
+  return(combined_data)
+}
+```
+
+
+
+Now to test the multi-year function.
+
+
+
+```{r}
+sample_multi_year <- pums_multi_year(
+  years = 2018:2019, numeric_variables = c("AGEP", "PWGTP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP"), categorical_variables = c("SEX", "FER", "HHL", "HISPEED", "SCH", "SCHL"), geography = "state", geography_code = "37"
+)
+head(sample_multi_year)
+```
+
+
+
+At this point, we have developed a set of functions that can query the API, return tibbles, and combine data across years. In the next section we will build generic summarizing and plotting functions to explore the data in more detail.
+
+# Writing a Generic Function for Summarizing
+
+Here we write a general function for summarizing. This function takes in three arguments: the tibble with class census, the numeric variable(s) to summarize, and the categorical variable(s) to summarize. By default, this function summarizes all numeric variables (other than PWGTP) and all categorical variables in the tibble. However, the user may also specify the variables they’d like to summarize. For numerical variables, the function will give the sample mean and standard deviation, and for categorical variables the function returns the counts. Here we also write a general function for plotting, where the user can specify one categorical variable and one numeric variable for plotting purposes.
+
+
+
+```{r}
+# Check structure of tibble
+str(sample_data)
+
+# Function takes in tibble, numeric variables, categorical variables
+summary_census <- function(census, numeric_var=NULL, cat_var=NULL){
+  
+# Naming all possible categorical variables
+cat_vars <- c("SEX", "FER", "HHL", "HISPEED", "SCH", "SCHL")
+
+# Naming all possible categorical variables for this function 
+all_cat_vars<-intersect(cat_vars, names(census))
+
+# Naming all possible numerical variables for the funciton
+num_vars <- c("AGEP", "PWGTP", "GASP", "GRPIP", "JWMNP")
+
+# Naming all possible numerica variables for this function 
+all_num_vars<-intersect(num_vars, names(census))
+  
+# Assigning weight to the column PWGTP in the data
+  weight <- census$PWGTP
+# This first if() will give back everything by default if no numeric or categorical variables are entered
+  if (is.null(numeric_var) & is.null(cat_var)) {
+   numeric_cols <- names(census)[sapply(census, is.numeric)]
+
+summary <- census |>
+  reframe(
+    # Sample mean
+    across(
+       all_of(all_num_vars[all_num_vars != "PWGTP"]),
+      function(x) sum(x * weight, na.rm = TRUE) / sum(weight, na.rm = TRUE),
+      .names = "{.col}_sample_mean"
+    ),
+    # Sample standard deviation
+    across(
+       all_of(all_num_vars[all_num_vars != "PWGTP"]),
+      function(x) sqrt(sum((x)^2 * weight, na.rm = TRUE) / sum(weight, na.rm = TRUE) -
+         (sum(x * weight, na.rm = TRUE) / sum(weight, na.rm = TRUE))^2),
+      .names = "{.col}_sample_sd"
+    )
+  )
+
+# Here we count the categorical variables
+   cat_counts <- census |>
+      as.data.frame() |>
+     select(all_of(all_cat_vars), PWGTP) |>
+  pivot_longer(
+    cols = all_cat_vars,
+    names_to = "variable",
+    values_to = "value"
+  ) |>
+      group_by(variable, value) |>
+      summarise(weighted_count = sum(PWGTP), .groups = "drop")
+   
+# Here we return the numerical and categorical summaries
+return(list(
+  Numeric_Summary = summary,
+  Categorical_Counts = cat_counts
+))
+   
+# This handles if the user does not submit any numeric variables, only categorical. It will provide the counts for the categorical variables they provided 
+  } else if (is.null(numeric_var)) { 
+   cat_counts <- census |>
+     select(all_of(all_cat_vars), PWGTP) |>
+      pivot_longer(
+       cols = all_of(cat_var),
+        names_to = "variable",
+        values_to = "value"
+      ) |>
+      group_by(variable, value) |>
+      summarise(weighted_count = sum(PWGTP), .groups = "drop")
+   
+   return(
+  Categorical_Counts = cat_counts
+)
+
+# This handles if the user does not submit any categorical variables, only numerical It will provide the summaries for the numerical variables they provided 
+  } else if(is.null(cat_var)) {
+  
+# Now we need to find the sample mean and standard deviation for the numerical variables they provided
+    summary <- census |>
+  reframe(
+    # Sample mean
+    across(
+      all_of(numeric_var),
+      function(x) sum(x * weight / sum(weight)),
+      .names = "{.col}_sample_mean"
+    ),
+    # Sample standard deviation
+    across(
+      all_of(numeric_var),
+      function(x) sqrt(sum(x^2 * weight) / sum(weight) - (sum(x * weight / sum(weight)))^2),
+      .names = "{.col}_sample_sd"
+    )
+  )
+return(list(
+  Numeric_Summary = summary
+))
+
+# This handles if the user enters categorical and numeric variables
+  }else{
+      cat_counts <- census |>
+     select(all_of(all_cat_vars), PWGTP) |>
+      pivot_longer(
+       cols = all_of(cat_var),
+        names_to = "variable",
+        values_to = "value"
+      ) |>
+      group_by(variable, value) |>
+      summarise(weighted_count = sum(PWGTP), .groups = "drop")
+   
+      
+# Now we need to find the sample mean and standard deviation for the numerical variables they provided
+    summary <- census |>
+      as.data.frame()|>
+  reframe(
+    # Sample mean
+    across(
+      all_of(all_num_vars[all_num_vars != "PWGTP"]),
+      function(x) sum(x * weight / sum(weight)),
+      .names = "{.col}_sample_mean"
+    ),
+    # Sample standard deviation
+    across(
+      all_of(all_num_vars[all_num_vars != "PWGTP"]),
+      function(x) sqrt(sum(x^2 * weight) / sum(weight) - (sum(x * weight / sum(weight)))^2),
+      .names = "{.col}_sample_sd"
+    )
+  )
+return(list(
+  Numeric_Summary = summary,
+  Categorical_Counts = cat_counts
+))
+  }
+} 
+# Test of just entering tibble
+summary_census(sample_data)
+
+# Test of entering tibble with numeric variable
+summary_census(sample_data, numeric_var = "AGEP")
+
+# Test of entering tibble with categorical variable
+summary_census(sample_data, cat_var = "SEX")
+
+# Test of entering tibble with categorical variable
+summary_census(sample_data, numeric_var = "AGEP", cat_var = "SEX")
+
+# Test of entering tibble with more than one numerical variable
+summary_census(sample_data, numeric_var = c("AGEP", "GASP"))
+
+# Test of entering tibble with more than one categorical variable
+summary_census(sample_data, cat_var = c("SEX", "SCHL"))
+
+# Test of entering tibble with more than one categorical variable and more than one numeric variable
+summary_census(sample_data, numeric_var = c("GRPIP", "JWMNP"), cat_var = c("HHL", "HISPEED"))
+```
+
+
+
+# Plotting
+
+Here we write a general function for plotting, where the user can specify one categorical variable and one numeric variable for plotting purposes.
+
+
+
+```{r}
+# Run these in your console
+plot.function #what is used for a class = function
+getS3method("plot","data.frame") #what is used for a class = data frame
+plot
+
+census_plot <-function(census_data, cat_var, num_var){
+ggplot(census_data,
+ aes(x = !!sym(cat_var), y = !!sym(num_var), weight = PWGTP)) +
+geom_boxplot()
+}
+
+# Test of plot function
+census_plot(sample_data, cat_var="SEX",num_var="AGEP")
+
+```
+
+
+
+# Data Investigation
+
+Now, we will investigate whether there is a relationship between household internet access and age in North Carolina in 2022. Specifically, we are asking the following: are younger people more likely to live in households with high-speed internet access?
+
+To do this, we will query the Census PUMS API for 2022 North Carolina data, selecting age (AGE) as the numeric variable and household high-speed internet access (HISPEED) as the categorical variable. We then summarize the data and generate a boxplot to visualize the relationship between the variables.
+
+
+
+```{r}
+# Query the API
+nc_data <- pums_query(year = 2022, numeric_variables = c("AGEP", "PWGTP"), categorical_variables = "HISPEED", geography = "state", geography_code = "37")
+
+# Summarize
+summary_census(nc_data, numeric_var = "AGEP", cat_var ="HISPEED")
+
+# Plot of the variables
+census_plot(nc_data, cat_var = "HISPEED", num_var = "AGEP")
+
+```
+
+
+
+The graph shows that the median age of individuals living in households with high-speed internet access appears lower than the median age of those in households without high speed access or N/A with no paid access to the internet. This suggests that younger people may be more likely to reside in households with internet access, though further statistical analysis would be needed to confirm this relationship. 
+
